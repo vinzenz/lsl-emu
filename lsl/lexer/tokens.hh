@@ -127,6 +127,8 @@ namespace lsl {
         OpNot,
         OpIncrease,
         OpDecrease,
+        OpBoolAnd,
+        OpBoolOr,
 
         DelimBraceOpen,
         DelimBraceClose,

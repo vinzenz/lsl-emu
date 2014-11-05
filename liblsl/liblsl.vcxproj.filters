@@ -1,0 +1,117 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\lsl">
+      <UniqueIdentifier>{337a327c-e6ca-42a1-97b4-851a14a78c68}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\lsl\parser">
+      <UniqueIdentifier>{8e78e0b7-84a7-4387-84d6-de3e07d340e0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\lsl\lexer">
+      <UniqueIdentifier>{e57cf9f2-b76e-42e1-823e-cb0b2df3281f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\lsl\ast">
+      <UniqueIdentifier>{001c7f88-0759-4a64-a7ef-562a349847b0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\lsl">
+      <UniqueIdentifier>{b4965752-dcde-4af2-ad02-ead67dc9660b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\lsl\lexer">
+      <UniqueIdentifier>{04e83798-5d64-4e5a-911a-d1c86afe6279}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\lsl\parser">
+      <UniqueIdentifier>{2a3a37a4-ea0b-43c4-be50-06d87817f024}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\double-conversion">
+      <UniqueIdentifier>{6d241c97-a494-43b6-906e-dfb3caf8cf33}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\lsl\lexer\lexer.cc">
+      <Filter>Source Files\lsl\lexer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\double-conversion\src\bignum.cc">
+      <Filter>Source Files\double-conversion</Filter>
+    </ClCompile>
+    <ClCompile Include="..\double-conversion\src\bignum-dtoa.cc">
+      <Filter>Source Files\double-conversion</Filter>
+    </ClCompile>
+    <ClCompile Include="..\double-conversion\src\cached-powers.cc">
+      <Filter>Source Files\double-conversion</Filter>
+    </ClCompile>
+    <ClCompile Include="..\double-conversion\src\diy-fp.cc">
+      <Filter>Source Files\double-conversion</Filter>
+    </ClCompile>
+    <ClCompile Include="..\double-conversion\src\double-conversion.cc">
+      <Filter>Source Files\double-conversion</Filter>
+    </ClCompile>
+    <ClCompile Include="..\double-conversion\src\fast-dtoa.cc">
+      <Filter>Source Files\double-conversion</Filter>
+    </ClCompile>
+    <ClCompile Include="..\double-conversion\src\fixed-dtoa.cc">
+      <Filter>Source Files\double-conversion</Filter>
+    </ClCompile>
+    <ClCompile Include="..\double-conversion\src\strtod.cc">
+      <Filter>Source Files\double-conversion</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lsl\filebuf.cc">
+      <Filter>Source Files\lsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lsl\parser\parser.cc">
+      <Filter>Source Files\lsl\parser</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\lsl\filebuf.hh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lsl\types.hh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lsl\parser\apply.hh">
+      <Filter>Header Files\lsl\parser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lsl\parser\error.hh">
+      <Filter>Header Files\lsl\parser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lsl\parser\parser.hh">
+      <Filter>Header Files\lsl\parser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lsl\parser\state.hh">
+      <Filter>Header Files\lsl\parser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lsl\ast\ast.hh">
+      <Filter>Header Files\lsl\ast</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lsl\lexer\delim.hh">
+      <Filter>Header Files\lsl\lexer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lsl\lexer\keyword.hh">
+      <Filter>Header Files\lsl\lexer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lsl\lexer\lexer.hh">
+      <Filter>Header Files\lsl\lexer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lsl\lexer\op.hh">
+      <Filter>Header Files\lsl\lexer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lsl\lexer\tokendef.hh">
+      <Filter>Header Files\lsl\lexer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lsl\lexer\tokens.hh">
+      <Filter>Header Files\lsl\lexer</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

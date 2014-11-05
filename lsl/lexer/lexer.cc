@@ -60,10 +60,10 @@ namespace lsl {
         return input_path_;
     }
 
-    std::string Lexer::get_line(int idx) {
+    std::string Lexer::get_line(uint64_t idx) {
         std::ifstream ifs(input_path_.c_str());
         std::string line;
-        int lineno = 1;
+        uint64_t lineno = 1;
         while(std::getline(ifs, line) && lineno != idx) {
             ++lineno;
         }
@@ -405,6 +405,10 @@ namespace lsl {
     char Lexer::skip_comment() {
         char c = next_char();
         bool multi = c == '*';
+        if(!multi && c != '/') {
+            put_char(c);
+            return '/';            
+        }
         do {
             c = next_char();
             if(c == '*') {
@@ -427,6 +431,10 @@ namespace lsl {
             case '/':
                 c = skip_comment();
                 if(file_.eof()) {
+                    return c;
+                }
+                // This was not a comment
+                if(c == '/') {
                     return c;
                 }
                 // It should now continue with newline
@@ -497,8 +505,8 @@ namespace lsl {
                 break;
             case '\x0c': // Allow formfeed as \n
             case '\n':
-                break; // Ignore all new lines
                 column_ = 0;
+                break; // Ignore all new lines
                 if(!continuation && level_ == 0) {
                     token_buffer_.push_back({
                             { Token::NewLine, TokenKind::NewLine, TokenClass::Default },

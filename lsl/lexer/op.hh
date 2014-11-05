@@ -26,6 +26,8 @@ namespace lsl {
         TokenDef(Token::OpDivAssign, TokenString("/="), TokenKind::SlashEqual, TokenClass::Operator),
         TokenDef(Token::OpModAssign, TokenString("%="), TokenKind::PercentEqual, TokenClass::Operator),
         TokenDef(Token::OpAndAssign, TokenString("&="), TokenKind::BinAndEqual, TokenClass::Operator),
+        TokenDef(Token::OpBoolAnd, TokenString("&&"), TokenKind::BoolAnd, TokenClass::Operator),
+        TokenDef(Token::OpBoolOr, TokenString("||"), TokenKind::BoolOr, TokenClass::Operator),
         TokenDef(Token::OpOrAssign, TokenString("|="), TokenKind::BinOrEqual, TokenClass::Operator),
         TokenDef(Token::OpXorAssign, TokenString("^="), TokenKind::CircumFlexEqual, TokenClass::Operator),
         TokenDef(Token::OpShiftLeftAssign, TokenString("<<="), TokenKind::LeftShiftEqual, TokenClass::Operator),

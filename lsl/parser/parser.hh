@@ -34,8 +34,13 @@ struct ParserOptions {
 };
 
 bool parse(Lexer & lexer,
+           Script & ast,
+           ParserOptions options = ParserOptions());
+
+bool parse(Lexer & lexer,
            AstPtr & ast,
            ParserOptions options = ParserOptions());
+
 
 }
 

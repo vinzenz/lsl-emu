@@ -147,6 +147,8 @@ namespace lsl {
         Increase        = 62,
         Decrease        = 63,
         TypeName        = 64,
+        BoolAnd         = 65,
+        BoolOr          = 66,
 
         // Let this be at the end
         KindCount,

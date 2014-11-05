@@ -1,0 +1,428 @@
+/*
+ * ANTLR 2.7.2 source for the formula parser
+ */
+
+options {
+	language = "CSharp";
+	namespace = "Exaflop.LSLCompilerCore";
+}
+
+
+/*****************************************************************************
+ *
+ * Parser
+ *
+ ****************************************************************************/
+
+class iLSLParser extends Parser;
+options {
+	classHeaderPrefix = "internal";
+	k=4;
+	buildAST = true;	// uses CommonAST by default
+}
+tokens {
+	// type names
+	INTEGER="integer";
+	FLOAT="float";
+	STRING="string";
+	KEY="key";
+	VECTOR="vector";
+	ROTATION="rotation";
+	LIST="list";
+	
+	// keywords
+	DEFAULT="default";
+	STATE="state";
+	EVENT="event";
+	JUMP="jump";
+	RETURN="return";
+	IF="if";
+	ELSE="else";
+	FOR="for";
+	DO="do";
+	WHILE="while";
+	
+	// event names
+	STATE_ENTRY="state_entry";
+	STATE_EXIT="state_exit";
+	TOUCH_START="touch_start";
+	TOUCH="touch";
+	TOUCH_END="touch_end";
+	COLLISION_START="collision_start";
+	COLLISION="collision";
+	COLLISION_END="collision_end";
+	LAND_COLLISION_START="land_collision_start";
+	LAND_COLLISION="land_collision";
+	LAND_COLLISION_END="land_collision_end";
+	TIMER="timer";
+	LISTEN="listen";
+	SENSOR="sensor";
+	NO_SENSOR="no_sensor";
+	CONTROL="control";
+	PRINT="print";
+	AT_TARGET="at_target";
+	NOT_AT_TARGET="not_at_target";
+	AT_ROT_TARGET="at_rot_target";
+	NOT_AT_ROT_TARGET="not_at_rot_target";
+	MONEY="money";
+	EMAIL="email";
+	RUN_TIME_PERMISSIONS="run_time_permissions";
+	CHANGED="changed";
+	ATTACH="attach";
+	DATASERVER="dataserver";
+	MOVING_START="moving_start";
+	MOVING_END="moving_end";
+	LINK_MESSAGE="link_message";
+	ON_REZ="on_rez";
+	OBJECT_REZ="object_rez";
+	REMOTE_DATA="remote_data";
+						
+	// imaginary tokens
+	EXPR;
+	UNARYMINUS;
+	UNARYPLUS;
+	DOT;
+	FP_CONSTANT;	
+}
+
+
+lscript_program
+	: ( global )* states
+	;
+	
+global
+	: global_variable
+	| global_function
+	;
+	
+global_variable
+	: typename IDENT ( EQUALS simple_assignable )? SEMI
+	;
+
+simple_assignable
+	: simple_assignable_no_list
+	| list_constant
+	;
+
+simple_assignable_no_list
+	: IDENT
+	| constant
+/*	| special_constant	*/
+	;
+
+constant
+	: INTEGER_CONSTANT
+	| FP_CONSTANT
+	| STRING_CONSTANT
+	;
+/*
+special_constant
+	: vector_constant
+	| quaternion_constant
+	;
+	
+special_constant_element
+	: IDENT
+	| constant
+	;
+
+vector_constant
+	: LEFT_ANGLE special_constant_element COMMA special_constant_element COMMA special_constant_element RIGHT_ANGLE
+	;
+	
+quaternion_constant
+	: LEFT_ANGLE special_constant_element COMMA special_constant_element COMMA special_constant_element COMMA special_constant_element RIGHT_ANGLE
+	;
+*/
+
+list_constant
+	: LEFT_SQUALRE ( list_entries )? RIGHT_SQUARE
+	;
+
+list_entries
+	: list_entry ( COMMA list_entry )*
+	;
+
+list_entry
+	: simple_assignable_no_list
+	;	
+
+typename
+	: INTEGER
+	| FLOAT
+	| STRING
+	| KEY
+	| VECTOR
+	| ROTATION
+	| LIST
+	;
+	
+global_function
+	: (typename)? IDENT LEFT_PAREN  ( function_parameters )?  RIGHT_PAREN compound_statement
+	;
+	
+function_parameters
+	: function_parameter ( COMMA function_parameter )*
+	;
+	
+function_parameter
+	: typename IDENT
+	;
+
+states
+	: default ( user_state )*
+	;
+	
+default
+	: DEFAULT LEFT_BRACE state_body RIGHT_BRACE
+	;
+	
+user_state
+	: STATE IDENT LEFT_BRACE state_body RIGHT_BRACE
+	;
+	
+state_body
+	: ( event )+
+	;
+
+// the parameters for each event are checked against static data in a post-parse step.
+event
+	: eventname LEFT_PAREN function_parameters RIGHT_PAREN compound_statement
+	;
+	
+eventname
+	: STATE_ENTRY | STATE_EXIT | TOUCH_START | TOUCH | TOUCH_END | COLLISION_START | COLLISION | COLLISION_END
+	| LAND_COLLISION_START | LAND_COLLISION | LAND_COLLISION_END | TIMER | LISTEN | SENSOR | NO_SENSOR | CONTROL
+	| PRINT | AT_TARGET | NOT_AT_TARGET | AT_ROT_TARGET | NOT_AT_ROT_TARGET | MONEY | EMAIL | RUN_TIME_PERMISSIONS
+	| CHANGED | ATTACH | DATASERVER | MOVING_START | MOVING_END | LINK_MESSAGE | ON_REZ | OBJECT_REZ | REMOTE_DATA
+	;
+
+
+compound_statement
+	: LEFT_BRACE ( statement )* RIGHT_BRACE															
+	;
+	
+	
+statement
+	: SEMI			
+	| STATE IDENT SEMI
+	| STATE DEFAULT SEMI
+	| JUMP IDENT SEMI
+	| AT IDENTIFIER SEMI
+	| RETURN expression SEMI
+	| RETURN SEMI
+	| expression SEMI
+	| declaration SEMI
+	| compound_statement						
+	| IF LEFT_PAREN expression RIGHT_PAREN statement ( options { warnWhenFollowAmbig=false;} : ELSE statement )?
+	| FOR LEFT_PAREN expressionlist SEMI expression SEMI expressionlist RIGHT_PAREN statement	
+	| DO statement WHILE LEFT_PAREN expression RIGHT_PAREN SEMI
+	| WHILE LEFT_PAREN expression RIGHT_PAREN statement		
+	;
+	
+declaration
+	: typename IDENT ( EQUALS expression )?
+	;
+
+expressionlist
+	: /* empty */								
+	| expression ( COMMA expression )*			
+	;
+
+	
+/*
+ *	Expressions :-
+ *
+ *  lowest R (12) EQUALS PLUS_EQUALS MINUS_EQUALS STAR_EQUALS SLASH_EQUALS PERCENT_EQUALS
+ *         L (11) AMP_AMP BAR_BAR
+ *         L (10) BAR
+ *         L  (9) HAT
+ *         L  (8) AMP
+ *         L  (7) EQUALS_EQUALS PLING_EQUALS
+ *         L  (6) LEFT_ANGLE LESSTHAN_EQUALS GREATER_EQUALS RIGHT_ANGLE
+ *         L  (5) LEFT_ANGLE2 RIGHT_ANGLE2
+ *         L  (4) PLUS MINUS
+ *         L  (3) STAR SLASH PERCENT
+ *         R  (2) PLING TILDE MINUS INCREMENT DECREMENT
+ *            (1) initializers
+ */
+
+expression
+	: assignmentExpression
+	  { #expression = #(#[EXPR,"EXPR"],#expression);}
+	;
+
+assignmentExpression
+	: logicalExpression
+	  (	 (EQUALS^ | PLUS_EQUALS^ | MINUS_EQUALS^ | STAR_EQUALS^ | SLASH_EQUALS^ | PERCENT_EQUALS^) assignmentExpression )?
+	;
+
+logicalExpression
+	: bitwiseOrExpression ( (AMP_AMP^ | BAR_BAR^) bitwiseOrExpression )*
+	;
+
+bitwiseOrExpression
+	: bitwiseXorExpression ( BAR bitwiseXorExpression )*
+	;
+	
+bitwiseXorExpression
+	: bitwiseAndExpression ( HAT bitwiseAndExpression )*
+	;
+
+bitwiseAndExpression
+	: equalityExpression ( AMP equalityExpression )*
+	;
+	
+equalityExpression
+	: relationalExpression ( (EQUALS_EQUALS^ | PLING_EQUALS^) relationalExpression )*
+	;
+	
+relationalExpression
+	: shiftExpression ( (LEFT_ANGLE^ | LESSTHAN_EQUALS^ | GREATER_EQUALS^ | RIGHT_ANGLE^) shiftExpression )*
+	;
+	
+shiftExpression
+	: additiveExpression ( (LEFT_ANGLE2^ | RIGHT_ANGLE2^) additiveExpression )*
+	;
+	
+additiveExpression
+	: multiplacativeExpression ( (PLUS^ | MINUS^ ) multiplacativeExpression )*
+	;
+	
+multiplacativeExpression
+	: unaryExpression ( (STAR^ | SLASH^ | PERCENT^) unaryExpression )*
+	;
+
+unaryExpression
+	: INCREMENT unaryExpression
+	| DECREMENT unaryExpression
+	| PLING^ unaryExpression
+	| TILDE^ unaryExpression
+	| MINUS^ unaryExpression
+	| postfixExpression
+	| LEFT_PAREN expression RIGHT_PAREN
+	| LEFT_PAREN typename RIGHT_PAREN unaryExpression
+	;
+
+postfixExpression
+	: lvalue ( INCREMENT | DECREMENT )?
+	| list_initializer
+	| IDENT LEFT_PAREN expressionlist RIGHT_PAREN
+	| constant
+	| (LEFT_ANGLE expression COMMA expression COMMA expression RIGHT_ANGLE) => LEFT_ANGLE expression COMMA expression COMMA expression RIGHT_ANGLE
+	;
+	
+list_initializer
+	: LEFT_SQUARE expressionlist RIGHT_SQUARE
+	;
+	
+
+lvalue 
+	: IDENT ( DOT IDENT )?
+	;
+	
+	
+
+	
+
+/*****************************************************************************
+ *
+ * Lexer
+ *
+ ****************************************************************************/
+
+class iLSLLexer extends Lexer;
+options {
+	classHeaderPrefix = "internal";
+	k = 2;
+	testLiterals=false;
+	charVocabulary = '\3'..'\377';
+}
+
+WS	:	(' '
+	|	'\t'
+	|	'\n'
+	|	'\r') +
+	{ $setType(Token.SKIP); }
+	;
+	
+// operators
+INCREMENT : "++" ;
+DECREMENT : "--";
+PLUS_EQUALS : "+=";
+MINUS_EQUALS : "-=";
+STAR_EQUALS : "*=";
+SLASH_EQUALS : "/=";
+PERCENT_EQUALS : "%=";
+SEMI : ';';
+LEFT_BRACE : '{' ;
+RIGHT_BRACE : '}' ;
+COMMA : ',' ;
+EQUALS : '=' ;
+LEFT_PAREN : '(' ;
+RIGHT_PAREN : ')' ;
+MINUS : '-' ;
+PLUS : '+' ;
+STAR : '*' ;
+SLASH : '/' ;
+PERCENT : '%' ;
+AT : '@' ;
+COLON : ':' ;
+RIGHT_ANGLE : '>';
+LEFT_ANGLE : '<' ;
+RIGHT_SQUARE : ']' ;
+LEFT_SQUARE : '[' ;
+EQUALS_EQUALS : "==" ;
+PLING_EQUALS : "!=" ;
+GREATER_EQUALS : ">=" ;
+LESSTHAN_EQUALS : "<=" ;
+AMP : '&' ;
+BAR : '|' ;
+HAT : '^' ;
+TILDE : '~' ;
+PLING : '!' ;
+AMP_AMP : "&&" ;
+BAR_BAR : "||" ;
+LEFT_ANGLE2 : "<<" ;
+RIGHT_ANGLE2 : ">>" ;
+	
+	
+protected
+LETTER		: 'a'..'z'	;
+
+protected
+DIGIT		: '0'..'9'	;
+
+
+	
+INTEGER_CONSTANT
+{ bool flt = false; } 
+	: '.' ( (DIGIT)+   ('e'|'E') ('+'|'-')? (DIGIT)+ )?
+	| (DIGIT)+  ('.' (DIGIT)*  ( ('e'|'E') ('+'|'-')? (DIGIT)+ )? ('f'|'F')?  )?
+	| '0' ('x'|'X') (DIGIT | 'a'..'f' | 'A'..'F')+
+/*	  
+	  {
+		if (text.Length-_begin == 1)
+			_ttype = DOT;
+      }
+     */
+	;
+	
+IDENT
+options {testLiterals=true;}
+	: LETTER ( LETTER | DIGIT | '_' )*
+	;	
+	
+
+STRING_CONSTANT : ('L')? '"'! (ESC|~'"')* '"'!
+	;
+	
+protected
+ESC	:	'\\'
+		(	'n'
+		|	't'
+		|	'"'
+		|	'\\'
+		)
+	;
+	

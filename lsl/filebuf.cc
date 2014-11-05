@@ -23,12 +23,17 @@
 #endif
 #include <stdio.h>
 
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable:4351)
+#endif
+
 namespace lsl {
 
     inline file_handle_t open_file(char const * file_path) {
         file_handle_t v{};
 #if defined(WIN32)
-        v.win = ::CreateFileA(file_path, GENERIC_READ, 0, 0, OPEN_EXISTING, 0, 0);
+        v.win_ = ::CreateFileA(file_path, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
 #else
         v.unix_ = ::open(file_path, O_RDONLY);
 #endif
@@ -56,8 +61,8 @@ namespace lsl {
 
     FileBuf::~FileBuf() {
 #if defined(WIN32)
-        if (handle_.win != INVALID_HANDLE_VALUE) {
-            CloseHandle(handle_.win);
+        if(handle_.win_ != INVALID_HANDLE_VALUE) {
+            CloseHandle(handle_.win_);
         }
 #else
         ::close(handle_.unix_);
@@ -94,9 +99,9 @@ namespace lsl {
     bool FileBuf::fill_buffer() {
 #if defined(WIN32)
         int n = -1;
-        if (handle_.win != INVALID_HANDLE_VALUE) {
+        if(handle_.win_ != INVALID_HANDLE_VALUE) {
             DWORD bytes_read = 0;
-            if (::ReadFile(handle_.win, buffer_, BufferSize, &bytes_read, 0)) {
+            if(::ReadFile(handle_.win_, buffer_, BufferSize, &bytes_read, 0)) {
                 n = int(bytes_read);
             }
         }
@@ -109,4 +114,6 @@ namespace lsl {
     }
 }
 
-
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif

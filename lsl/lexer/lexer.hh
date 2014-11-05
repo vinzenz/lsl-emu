@@ -67,7 +67,7 @@ public:
     ~Lexer();
 
     std::string get_name() const;
-    std::string get_line(int idx);
+    std::string get_line(uint64_t idx);
 
     std::list<LexerInfo> const & info();
 
