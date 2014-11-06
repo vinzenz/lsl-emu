@@ -1,22 +1,10 @@
 #include <lsl/ast/ast.hh>
 #include <lsl/lexer/lexer.hh>
 #include <lsl/parser/state.hh>
-
-#if defined(WIN32)
-#   include <boost/multiprecision/cpp_int.hpp>
-#else
-#   include <gmp.h>
-#endif
-
+#include <boost/multiprecision/cpp_int.hpp>
 #include <double-conversion/src/double-conversion.h>
 
 namespace lsl {
-
-template< typename T, typename U>
-std::shared_ptr<T> ast_cast(std::shared_ptr<U> u) {
-    return std::static_pointer_cast<T>(u);
-}
-
 
 template<typename T>
 AstPtr error_transform(T const & t) {
@@ -200,7 +188,7 @@ bool list_init(State & s, AstPtr & target, parser_fun_t fun = expression){
     return guard.commit();
 }
 
-bool lvalue(State &s, AstPtr &target) {    
+bool lvalue(State &s, AstPtr &target) {
     StateGuard guard(s, target);
     auto ast = create<Variable>(target);
     location(s, ast);
@@ -222,11 +210,14 @@ bool integer_constant(State & s, AstPtr & target) {
 
     bool minus = expect(s, TokenKind::Minus);
 
-    auto value = (minus ? "-" : "") + String(top(s).value);
-    int base = value.size() > 2 ? (value[1] == 'x' || value[1] == 'X' ? 16 : 10) : 10;
+    auto value =
+                 (minus ? "-" : "")
+               + (
+                        (token(top(s)) == Token::NumberHex ? "0x" : "")
+                    +   String(top(s).value)
+                 );
 
     if(is(s, TokenKind::Number)) {
-#if defined(WIN32)
         try {
             boost::multiprecision::checked_int128_t integ(value);
             ast->value = static_cast<decltype(ast->value)>(integ);
@@ -234,15 +225,6 @@ bool integer_constant(State & s, AstPtr & target) {
         catch(std::runtime_error const &) {
             return false;
         }
-#else
-        MP_INT integ;
-        mpz_init_set_str(&integ, top(s).value.c_str(), base);
-        if(!mpz_fits_slong_p(&integ)) {
-            return false;
-        }
-        ast->value = mpz_get_si(&integ);
-        mpz_clear(&integ);
-#endif
         pop(s);
     }
     else {
@@ -397,7 +379,7 @@ bool declaration(State & s, AstPtr & target) {
             return false;
         }
     }
-    
+
     return guard.commit();
 }
 
@@ -526,7 +508,7 @@ bool postfix_expr(State &s, AstPtr &target) {
             }
             else {
                 target.reset();
-            }            
+            }
         }
         // Fallback -> just an lvalue
         if(!target) {
@@ -748,7 +730,7 @@ bool bitwise_and_expr(State &s, AstPtr &target) {
             if(!bitwise_and_expr(s, binop->right)) {
                 return false;
             }
-        }        
+        }
     }
     else {
         return false;
@@ -806,7 +788,7 @@ bool logical_expr(State &s, AstPtr &target) {
     location(s, boolop);
     boolop->op = AstBoolOpType::Undefined;
 
-    if(bitwise_or_expr(s, boolop->left)) {        
+    if(bitwise_or_expr(s, boolop->left)) {
         if(expect(s, TokenKind::BoolOr)) {
             boolop->op = AstBoolOpType::Or;
         }
@@ -889,7 +871,10 @@ bool statement(State & s, AstPtr & target) {
     if(expect(s, Token::KeywordState)) {
         auto statech = create<StateChange>(target);
         location(s, statech);
-        if(!consume_value(s, Token::Identifier, statech->state)) {
+        if(expect(s, Token::KeywordDefault)) {
+            statech->state = "default";
+        }
+        else if(!consume_value(s, Token::Identifier, statech->state)) {
             return false;
         }
         needsSemiColon = true;
@@ -1107,7 +1092,7 @@ bool state(State & s, AstPtr & target) {
         syntax_error(s, ste, "Expected identifier for 'state'");
         return false;
     }
-    
+
     return state_body(s, ste->events)
         && guard.commit();
 }

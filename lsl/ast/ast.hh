@@ -7,6 +7,12 @@
 
 namespace lsl {
 
+
+template< typename T, typename U>
+std::shared_ptr<T> ast_cast(std::shared_ptr<U> u) {
+    return std::static_pointer_cast<T>(u);
+}
+
 enum class AstType {
     Function,
     Body,
@@ -212,6 +218,7 @@ struct AugAssignment : AstT<AstType::AugAssignment> {
     AstBinOpType op;
 };
 
+// Acts as scope
 struct Body : AstT<AstType::Body> {
     std::vector<AstPtr> statements;
 };

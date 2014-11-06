@@ -4,7 +4,6 @@ CONFIG -= app_bundle
 CONFIG -= qt
 
 QMAKE_CXXFLAGS=-std=c++11 -I. -O0 -ggdb
-QMAKE_LIBS=-lgmp
 
 SOURCES += main.cpp \
     lsl/lexer/lexer.cc \
@@ -16,7 +15,9 @@ SOURCES += main.cpp \
     double-conversion/src/double-conversion.cc \
     double-conversion/src/fast-dtoa.cc \
     double-conversion/src/fixed-dtoa.cc \
-    double-conversion/src/strtod.cc
+    double-conversion/src/strtod.cc \
+    lsl/parser/parser.cc \
+    lsl/ast/api.cc
 
 include(deployment.pri)
 qtcAddDeployment()
@@ -34,5 +35,16 @@ HEADERS += \
     lsl/parser/apply.hh \
     lsl/parser/error.hh \
     lsl/parser/state.hh \
-    lsl/parser/parser.hh
+    lsl/parser/parser.hh \
+    double-conversion/src/bignum-dtoa.h \
+    double-conversion/src/bignum.h \
+    double-conversion/src/cached-powers.h \
+    double-conversion/src/diy-fp.h \
+    double-conversion/src/double-conversion.h \
+    double-conversion/src/fast-dtoa.h \
+    double-conversion/src/fixed-dtoa.h \
+    double-conversion/src/ieee.h \
+    double-conversion/src/strtod.h \
+    double-conversion/src/utils.h \
+    lsl/ast/api.hh
 
