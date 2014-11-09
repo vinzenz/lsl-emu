@@ -332,8 +332,34 @@ bool simple_assignable_no_list(State & s, AstPtr & target) {
         ;
 }
 
+bool cast_or_expression(State & s, AstPtr & target, parser_fun_t cast_inner_fun, parser_fun_t other) {
+    StateGuard guard(s, target);
+    if(expect(s, TokenKind::LeftParen)) {
+        String name;
+        if(consume_value(s, TokenKind::TypeName, name)) {
+            if(!expect(s, TokenKind::RightParen)) {
+                return false;
+            }
+            auto cast = create<TypeCast>(target);
+            location(s, cast);
+            cast->target_type.swap(name);
+            if(!cast_inner_fun(s, cast->right)) {
+                return false;
+            }
+            return guard.commit();
+        }
+        else {
+            if(other(s, target) && expect(s, TokenKind::RightParen)) {
+                return guard.commit();
+            }
+        }
+    }
+    return false;
+}
+
 bool simple_assignable(State & s, AstPtr & target) {
-    return simple_assignable_no_list(s, target)
+    return cast_or_expression(s, target, simple_assignable, simple_assignable)
+        || simple_assignable_no_list(s, target)
         || list_constant(s, target)
         ;
 }
@@ -561,29 +587,8 @@ bool unary_expr(State &s, AstPtr &target) {
         return unary_expr(s, unary->target) && guard.commit();
     }
     else {
-        if(postfix_expr(s, target)) {
-            return guard.commit();
-        }
-        if(expect(s, TokenKind::LeftParen)) {
-            String name;
-            if(consume_value(s, TokenKind::TypeName, name)) {
-                if(!expect(s, TokenKind::RightParen)) {
-                    return false;
-                }
-                auto cast = create<TypeCast>(target);
-                location(s, cast);
-                cast->target_type.swap(name);
-                if(!unary_expr(s, cast->right)) {
-                    return false;
-                }
-                return guard.commit();
-            }
-            else {
-                if(expression(s, target) && expect(s, TokenKind::RightParen)) {
-                    return guard.commit();
-                }
-            }
-        }
+        return cast_or_expression(s, target, unary_expr, expression)
+            && guard.commit();
     }
     return false;
 }

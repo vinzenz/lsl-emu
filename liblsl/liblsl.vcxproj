@@ -19,6 +19,7 @@
     <ClCompile Include="..\double-conversion\src\fast-dtoa.cc" />
     <ClCompile Include="..\double-conversion\src\fixed-dtoa.cc" />
     <ClCompile Include="..\double-conversion\src\strtod.cc" />
+    <ClCompile Include="..\lsl\ast\api.cc" />
     <ClCompile Include="..\lsl\filebuf.cc" />
     <ClCompile Include="..\lsl\lexer\lexer.cc" />
     <ClCompile Include="..\lsl\parser\parser.cc" />
@@ -36,6 +37,9 @@
     <ClInclude Include="..\lsl\parser\error.hh" />
     <ClInclude Include="..\lsl\parser\parser.hh" />
     <ClInclude Include="..\lsl\parser\state.hh" />
+    <ClInclude Include="..\lsl\runtime\quaternion.hh" />
+    <ClInclude Include="..\lsl\runtime\types.hh" />
+    <ClInclude Include="..\lsl\runtime\vector.hh" />
     <ClInclude Include="..\lsl\types.hh" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

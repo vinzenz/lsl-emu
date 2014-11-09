@@ -1,5 +1,6 @@
 #include <lsl/parser/parser.hh>
 #include <lsl/ast/api.hh>
+#include <lsl/runtime/types.hh>
 
 int main(int argc, char const **argv)
 {
@@ -40,6 +41,16 @@ int main(int argc, char const **argv)
             }
         }
     }
+
+    using boost::math::double_constants::degree;
+    using boost::math::double_constants::radian;
+    using boost::math::double_constants::pi;
+    lsl::runtime::Vector v{0.3, 3.0, -2.0};
+    //lsl::runtime::Vector v{90., 90., 180.};
+    auto qv = from_euler(v * degree);
+    auto rv = to_euler(qv) * radian;
+    printf("qv  %s\n", to_string(qv).c_str());
+    printf("rv  %s\n", to_string(rv).c_str());
 
     return parse_result ? EXIT_SUCCESS : EXIT_FAILURE;
 }

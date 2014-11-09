@@ -37,6 +37,12 @@
     <Filter Include="Source Files\double-conversion">
       <UniqueIdentifier>{6d241c97-a494-43b6-906e-dfb3caf8cf33}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\lsl\ast">
+      <UniqueIdentifier>{1630dacd-6e1e-40a5-803e-aab79113ff1c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\lsl\runtime">
+      <UniqueIdentifier>{bf61b9dd-2020-4f3a-9cc5-3d7208bed957}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\lsl\lexer\lexer.cc">
@@ -71,6 +77,9 @@
     </ClCompile>
     <ClCompile Include="..\lsl\parser\parser.cc">
       <Filter>Source Files\lsl\parser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lsl\ast\api.cc">
+      <Filter>Source Files\lsl\ast</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -112,6 +121,15 @@
     </ClInclude>
     <ClInclude Include="..\lsl\lexer\tokens.hh">
       <Filter>Header Files\lsl\lexer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lsl\runtime\quaternion.hh">
+      <Filter>Header Files\lsl\runtime</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lsl\runtime\types.hh">
+      <Filter>Header Files\lsl\runtime</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lsl\runtime\vector.hh">
+      <Filter>Header Files\lsl\runtime</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
