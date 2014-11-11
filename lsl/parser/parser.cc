@@ -262,6 +262,7 @@ bool quaternion_constant(State & s, AstPtr & target) {
     return quaternion_init(s, target, simple_assignable);
 }
 
+String make_string(String const & input);
 bool string_constant(State & s, AstPtr & target) {
     StateGuard guard(s, target);
     auto ast = create<StringLit>(target);
@@ -270,6 +271,7 @@ bool string_constant(State & s, AstPtr & target) {
     if(!consume_value(s, TokenKind::String, ast->value)) {
         return false;
     }
+    ast->value = make_string(ast->value);
 
     return guard.commit();
 }
@@ -587,7 +589,8 @@ bool unary_expr(State &s, AstPtr &target) {
         return unary_expr(s, unary->target) && guard.commit();
     }
     else {
-        return cast_or_expression(s, target, unary_expr, expression)
+        return (cast_or_expression(s, target, unary_expr, expression)
+            || postfix_expr(s, target))
             && guard.commit();
     }
     return false;

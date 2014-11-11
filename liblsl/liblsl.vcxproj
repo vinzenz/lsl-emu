@@ -20,12 +20,16 @@
     <ClCompile Include="..\double-conversion\src\fixed-dtoa.cc" />
     <ClCompile Include="..\double-conversion\src\strtod.cc" />
     <ClCompile Include="..\lsl\ast\api.cc" />
+    <ClCompile Include="..\lsl\ast\printer.cc" />
     <ClCompile Include="..\lsl\filebuf.cc" />
     <ClCompile Include="..\lsl\lexer\lexer.cc" />
+    <ClCompile Include="..\lsl\parser\make_string.cc" />
     <ClCompile Include="..\lsl\parser\parser.cc" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\lsl\ast\api.hh" />
     <ClInclude Include="..\lsl\ast\ast.hh" />
+    <ClInclude Include="..\lsl\ast\printer.hh" />
     <ClInclude Include="..\lsl\filebuf.hh" />
     <ClInclude Include="..\lsl\lexer\delim.hh" />
     <ClInclude Include="..\lsl\lexer\keyword.hh" />
@@ -37,9 +41,15 @@
     <ClInclude Include="..\lsl\parser\error.hh" />
     <ClInclude Include="..\lsl\parser\parser.hh" />
     <ClInclude Include="..\lsl\parser\state.hh" />
+    <ClInclude Include="..\lsl\runtime\library\functions.hh" />
     <ClInclude Include="..\lsl\runtime\quaternion.hh" />
     <ClInclude Include="..\lsl\runtime\types.hh" />
     <ClInclude Include="..\lsl\runtime\vector.hh" />
+    <ClInclude Include="..\lsl\runtime\world\inventory.hh" />
+    <ClInclude Include="..\lsl\runtime\world\object.hh" />
+    <ClInclude Include="..\lsl\runtime\world\prim.hh" />
+    <ClInclude Include="..\lsl\runtime\world\script.hh" />
+    <ClInclude Include="..\lsl\runtime\world\simulator.hh" />
     <ClInclude Include="..\lsl\types.hh" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

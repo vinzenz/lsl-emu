@@ -1,5 +1,6 @@
 #include <lsl/parser/parser.hh>
 #include <lsl/ast/api.hh>
+#include <lsl/ast/printer.hh>
 #include <lsl/runtime/types.hh>
 
 int main(int argc, char const **argv)
@@ -9,9 +10,9 @@ int main(int argc, char const **argv)
     }
     lsl::Lexer lex(argv[1]);
     lsl::Script scr;
-    bool parse_result = lsl::parse(lex, scr);
-    printf("\nLast line: %I64d\nSuccess: %s\n", lex.next().line, parse_result ? "yes" : "no");
-
+    bool parse_result = lsl::parse(lex, scr);    
+    //printf("\nLast line: %I64d\nSuccess: %s\n", lex.next().line, parse_result ? "yes" : "no");
+    /*
     if(parse_result) {
         printf("Global Variables:\n");
         for(auto const & var : lsl::get_global_variables(scr)) {
@@ -51,6 +52,10 @@ int main(int argc, char const **argv)
     auto rv = to_euler(qv) * radian;
     printf("qv  %s\n", to_string(qv).c_str());
     printf("rv  %s\n", to_string(rv).c_str());
+    */
+
+    lsl::ast::PrinterState ps{0};
+    lsl::ast::print(ps, scr);
 
     return parse_result ? EXIT_SUCCESS : EXIT_FAILURE;
 }

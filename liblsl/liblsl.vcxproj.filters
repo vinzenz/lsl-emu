@@ -43,6 +43,12 @@
     <Filter Include="Header Files\lsl\runtime">
       <UniqueIdentifier>{bf61b9dd-2020-4f3a-9cc5-3d7208bed957}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\lsl\runtime\world">
+      <UniqueIdentifier>{f0bb4b5c-e8f3-4a0f-9855-2be2fc477e81}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\lsl\runtime\library">
+      <UniqueIdentifier>{1f732859-e03c-4f0b-9d46-37fe53a852ba}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\lsl\lexer\lexer.cc">
@@ -80,6 +86,12 @@
     </ClCompile>
     <ClCompile Include="..\lsl\ast\api.cc">
       <Filter>Source Files\lsl\ast</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lsl\ast\printer.cc">
+      <Filter>Source Files\lsl\ast</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lsl\parser\make_string.cc">
+      <Filter>Source Files\lsl\parser</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -130,6 +142,30 @@
     </ClInclude>
     <ClInclude Include="..\lsl\runtime\vector.hh">
       <Filter>Header Files\lsl\runtime</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lsl\ast\api.hh">
+      <Filter>Header Files\lsl\ast</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lsl\ast\printer.hh">
+      <Filter>Header Files\lsl\ast</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lsl\runtime\world\object.hh">
+      <Filter>Header Files\lsl\runtime\world</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lsl\runtime\world\prim.hh">
+      <Filter>Header Files\lsl\runtime\world</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lsl\runtime\world\script.hh">
+      <Filter>Header Files\lsl\runtime\world</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lsl\runtime\world\simulator.hh">
+      <Filter>Header Files\lsl\runtime\world</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lsl\runtime\world\inventory.hh">
+      <Filter>Header Files\lsl\runtime\world</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lsl\runtime\library\functions.hh">
+      <Filter>Header Files\lsl\runtime\library</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
