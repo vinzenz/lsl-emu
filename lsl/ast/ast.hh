@@ -152,7 +152,7 @@ struct StringLit : AstT<AstType::String> {
 };
 
 struct Integer : AstT<AstType::Integer> {
-    int64_t value;
+    int32_t value;
 };
 
 struct Float : AstT<AstType::Float> {

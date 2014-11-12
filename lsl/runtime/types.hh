@@ -19,7 +19,7 @@ inline String to_string(float val) {
 }
 
 inline String to_string(Vector val) {
-    std::ostringstream ostr;    
+    std::ostringstream ostr;
     ostr << '<' << std::setiosflags(std::ios::fixed) << std::setprecision(5)
          << val.x
          << ", "
@@ -48,6 +48,7 @@ enum class ValueType {
     Void,
     String,
     Key,
+    List,
     Float,
     Integer,
     Vector,
@@ -60,7 +61,7 @@ struct Variable {
 };
 
 struct Value {
-    Variable signature;    
+    Variable signature;
     String      s;
     String      k;
     float       f;
@@ -69,7 +70,7 @@ struct Value {
     Quaternion  r;
 };
 
-struct Scope {    
+struct Scope {
 };
 
 struct Function {

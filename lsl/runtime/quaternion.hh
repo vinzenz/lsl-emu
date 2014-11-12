@@ -27,7 +27,7 @@ namespace runtime {
             l.s - r.s
         };
     }
-    
+
     inline Quaternion mul(Quaternion l, Quaternion r) {
         return Quaternion{
             r.s * l.x + r.x * l.s + r.y * l.z - r.z * l.y,
@@ -42,6 +42,10 @@ namespace runtime {
         Quaternion nq{-r.x, -r.y, -r.z, r.s};
         Quaternion result = mul(nq, mul(vq, r));
         return{result.x, result.y, result.z};
+    }
+
+    inline Quaternion mul(Quaternion l, double r) {
+        return {l.x * r, l.y * r, l.z * r, l.s * r};
     }
 
     inline Quaternion div(Quaternion l, Quaternion r) {
@@ -60,7 +64,13 @@ namespace runtime {
     inline Quaternion operator * (Quaternion const & a, Quaternion const & b) {
         return mul(a, b);
     }
+    inline Quaternion operator * (Quaternion const & a, double b) {
+        return mul(a, b);
+    }
     inline Quaternion operator / (Quaternion const & a, Quaternion const & b) {
+        return div(a, b);
+    }
+    inline Vector operator / (Vector const & a, Quaternion const & b) {
         return div(a, b);
     }
     inline Quaternion operator + (Quaternion const & a, Quaternion const & b) {
@@ -118,16 +128,16 @@ namespace runtime {
 
     inline Vector to_euler(Quaternion r) {
         using namespace boost::math::double_constants;
-        
+
         double sx = 2. * (r.x * r.s - r.y * r.z);
         double sy = 2. * (r.y * r.s + r.x * r.z);
-        
+
         double ys = r.s * r.s - r.y * r.y;
         double xz = r.x * r.x - r.z * r.z;
-        
+
         double cx = ys - xz;
         double cy = sqrt(sx * sx + cx * cx);
-        
+
         if(cy > GIMBAL_THRESHOLD) {
             return Vector{
                 atan2(sx, cx),
@@ -135,7 +145,7 @@ namespace runtime {
                 atan2(2 * (r.z * r.s - r.x * r.y), ys + xz)
             };
         }
-        
+
         if(sy > 0) {
             return Vector{
                 0.,
@@ -150,12 +160,12 @@ namespace runtime {
         };
     }
 
-    double mag(Quaternion q) {
+    inline double mag(Quaternion q) {
         return sqrt(q.x * q.x + q.y * q.y + q.z * q.z + q.s * q.s);
     }
 
     inline Quaternion normalize(Quaternion q) {
-       
+
         double m = mag(q);
         if(m < FP_MAG_THRESHOLD) {
             return Quaternion{0., 0., 0., 1.};

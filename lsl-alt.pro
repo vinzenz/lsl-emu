@@ -17,7 +17,11 @@ SOURCES += main.cpp \
     double-conversion/src/fixed-dtoa.cc \
     double-conversion/src/strtod.cc \
     lsl/parser/parser.cc \
-    lsl/ast/api.cc
+    lsl/ast/api.cc \
+    lsl/ast/printer.cc \
+    lsl/parser/make_string.cc \
+    lsl/runtime/world/script/value.cc \
+    lsl/runtime/world/script/eval.cc
 
 include(deployment.pri)
 qtcAddDeployment()
@@ -46,5 +50,34 @@ HEADERS += \
     double-conversion/src/ieee.h \
     double-conversion/src/strtod.h \
     double-conversion/src/utils.h \
-    lsl/ast/api.hh
+    lsl/ast/api.hh \
+    double-conversion/test/cctest/cctest.h \
+    double-conversion/test/cctest/checks.h \
+    double-conversion/test/cctest/gay-fixed.h \
+    double-conversion/test/cctest/gay-precision.h \
+    double-conversion/test/cctest/gay-shortest-single.h \
+    double-conversion/test/cctest/gay-shortest.h \
+    lsl/ast/printer.hh \
+    lsl/runtime/library/functions.hh \
+    lsl/runtime/world/inventory.hh \
+    lsl/runtime/world/object.hh \
+    lsl/runtime/world/prim.hh \
+    lsl/runtime/world/script.hh \
+    lsl/runtime/world/simulator.hh \
+    lsl/runtime/quaternion.hh \
+    lsl/runtime/types.hh \
+    lsl/runtime/vector.hh \
+    lsl/runtime/world/script/call.hh \
+    lsl/runtime/world/script/script.hh \
+    lsl/runtime/world/script/state.hh \
+    lsl/runtime/world/script/value.hh \
+    lsl/runtime/world/script/value_convert.hh \
+    lsl/runtime/world/script/constants.hh \
+    lsl/runtime/world/script/type_info.hh \
+    lsl/runtime/world/script/error.hh \
+    lsl/runtime/world/script/context.hh \
+    lsl/utils.hh \
+    lsl/runtime/world/script/function.hh \
+    lsl/runtime/world/script_fwd.hh \
+    lsl/runtime/world/script/eval.hh
 

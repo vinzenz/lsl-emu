@@ -1157,7 +1157,7 @@ bool script(State & s, Script & result) {
 
 bool parse(Lexer & lexer,
            Script & ast,
-           ParserOptions options /* = ParserOptions() */) {
+           ParserOptions /*options = ParserOptions() */) {
     State state{&lexer, {}, {}, {}, lexer.next(), {}, {}};
     return script(state, ast);
 }

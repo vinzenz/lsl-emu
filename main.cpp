@@ -2,7 +2,7 @@
 #include <lsl/ast/api.hh>
 #include <lsl/ast/printer.hh>
 #include <lsl/runtime/types.hh>
-
+#include <lsl/runtime/world/script.hh>
 int main(int argc, char const **argv)
 {
     if(argc < 2) {
@@ -10,7 +10,7 @@ int main(int argc, char const **argv)
     }
     lsl::Lexer lex(argv[1]);
     lsl::Script scr;
-    bool parse_result = lsl::parse(lex, scr);    
+    bool parse_result = lsl::parse(lex, scr);
     //printf("\nLast line: %I64d\nSuccess: %s\n", lex.next().line, parse_result ? "yes" : "no");
     /*
     if(parse_result) {

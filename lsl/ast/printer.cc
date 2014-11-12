@@ -3,7 +3,7 @@
 namespace lsl {
 namespace ast {
 
-void print(PrinterState & state, Script const & s) {    
+void print(PrinterState & state, Script const & s) {
     print(state, s.globals);
     print(state, s.states);
 }
@@ -49,9 +49,9 @@ void print(PrinterState & state, Ast const & a) {
     }
 }
 
-void print(PrinterState & state, ExpressionList const & e) {
+void print(PrinterState & state, ExpressionList const & el) {
     bool first = true;
-    for(auto const & e : e.expressions) {
+    for(auto const & e : el.expressions) {
         if(!first) {
             printf(", ");
         }
@@ -65,14 +65,14 @@ void print(PrinterState & state, Jump const & j) {
     printf("jump %s", j.label.c_str());
 }
 
-void print(PrinterState & state, Label const & l) {
-    printf("@%s");
+void print(PrinterState &, Label const & l) {
+    printf("@%s", l.name.c_str());
 }
 
-void print(PrinterState & state, NoOp const & n) {            
+void print(PrinterState &, NoOp const &) {
 }
 
-void print(PrinterState & state, StateChange const & s) {
+void print(PrinterState &, StateChange const & s) {
     printf("state %s", s.state.c_str());
 }
 
@@ -224,20 +224,20 @@ char const * to_string(AstCompareOpType op) {
     return nullptr;
 }
 
-void print(PrinterState & state, Key const & k) {
+void print(PrinterState &, Key const & k) {
     printf("(key)");
     print_escaped_string(k.value);
 }
 
-void print(PrinterState & state, StringLit const & s) {
+void print(PrinterState &, StringLit const & s) {
     print_escaped_string(s.value);
 }
 
-void print(PrinterState & state, Integer const & i) {
+void print(PrinterState &, Integer const & i) {
     printf("%d", i.value);
 }
 
-void print(PrinterState & state, Float const & f) {
+void print(PrinterState &, Float const & f) {
     printf("%.9g", f.value);
 }
 
@@ -269,7 +269,7 @@ void print(PrinterState & state, TypeCast const & t) {
     print(state, t.right);
 }
 
-void print(PrinterState & state, TypeDecl const & t) {
+void print(PrinterState &, TypeDecl const & t) {
     printf("%s %s", t.type.c_str(), t.name.c_str());
 }
 
@@ -314,7 +314,7 @@ void print(PrinterState & state, Body const & b) {
             default:
                 printf(";\n");
         }
-        
+
     }
     state.outdent();
     state.print_padding();
@@ -409,7 +409,7 @@ void print(PrinterState & state, StateDef const & s) {
     else {
         printf("state %s {\n", s.name.c_str());
     }
-    
+
     state.indent();
     for(auto const & e : s.events) {
         print(state, e);
@@ -450,12 +450,12 @@ void print(PrinterState & state, Return const & r) {
 
 void print(PrinterState & state, States const & s) {
     for(auto const & ste : s.states) {
-        print(state, ste);        
+        print(state, ste);
         printf("\n");
     }
 }
 
-void print(PrinterState & state, Variable const & v) {
+void print(PrinterState &, Variable const & v) {
     printf("%s%s%s", v.name.c_str(), v.member.empty() ? "" : ".", v.member.c_str());
 }
 
