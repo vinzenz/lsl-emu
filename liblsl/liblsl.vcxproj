@@ -26,6 +26,7 @@
     <ClCompile Include="..\lsl\parser\make_string.cc" />
     <ClCompile Include="..\lsl\parser\parser.cc" />
     <ClCompile Include="..\lsl\runtime\world\script\eval.cc" />
+    <ClCompile Include="..\lsl\runtime\world\script\state.cc" />
     <ClCompile Include="..\lsl\runtime\world\script\value.cc" />
   </ItemGroup>
   <ItemGroup>

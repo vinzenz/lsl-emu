@@ -43,7 +43,7 @@ struct CompiledScriptFunction {
     std::function<CallResult(ScriptFunctionCall const &)> function;
 };
 
-Script eval_script(String const & prim_key, lsl::Script const & ast);
+ScriptPtr eval_script(String const & prim_key, lsl::Script const & ast);
 CompiledScriptFunction eval_function(ScriptRef script, lsl::Function const & ast);
 
 }}}

@@ -58,7 +58,7 @@ int main(int argc, char const **argv)
     lsl::ast::PrinterState ps{0};
     lsl::ast::print(ps, scr);
     */
-#if 0
+#if 1
     using namespace lsl::runtime::script;
     using lsl::runtime::ValueType;
     auto llSay = CompiledScriptFunction{
@@ -73,8 +73,8 @@ int main(int argc, char const **argv)
 
     auto script = eval_script("Fake", scr);
 
-    script.dispatch_event("state_entry", {});
-    script.dispatch_event("state_exit", {});
+    script->dispatch_event("state_entry", {});
+    script->dispatch_event("state_exit", {});
 #endif
 
     lsl::runtime::Simulator simulator;

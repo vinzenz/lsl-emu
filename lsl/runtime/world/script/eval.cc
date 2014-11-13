@@ -1757,26 +1757,26 @@ StatePtr eval_state(
     return state;
 }
 
-Script eval_script(String const & prim_key, lsl::Script const & ast) {
-    Script script(prim_key);
-    auto scope = Scope(ast, boost::ref(script));
+ScriptPtr eval_script(String const & prim_key, lsl::Script const & ast) {
+    auto script = std::make_shared<Script>(prim_key);
+    auto scope = Scope(ast, boost::ref(*script));
     for(auto const & constant : get_global_variables(ast)) {
-        script.globals[constant.name];
+        script->globals[constant.name];
         if(constant.right) {
-            auto value = eval_expr(boost::ref(script), scope, constant.right);
-            script.globals[constant.name] = value.compiled(scope).get();
+            auto value = eval_expr(boost::ref(*script), scope, constant.right);
+            script->globals[constant.name] = value.compiled(scope).get();
         }
     }
     for(auto const & fun : get_functions(ast)) {
-        script.functions[fun.name] = std::make_shared<ScriptFunction>(eval_function(boost::ref(script), fun));
+        script->functions[fun.name] = std::make_shared<ScriptFunction>(eval_function(boost::ref(*script), fun));
     }
 
     for(auto const & state : ast.states.states) {
-        script.states[state->name];
+        script->states[state->name];
     }
 
     for(auto const & state : ast.states.states) {
-        script.states[state->name] = eval_state(boost::ref(script), *state);
+        script->states[state->name] = eval_state(boost::ref(*script), *state);
     }
 
     return script;

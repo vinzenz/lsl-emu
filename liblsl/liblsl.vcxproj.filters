@@ -111,6 +111,9 @@
     <ClCompile Include="..\lsl\runtime\world\script\value.cc">
       <Filter>Source Files\lsl\runtime\world\script</Filter>
     </ClCompile>
+    <ClCompile Include="..\lsl\runtime\world\script\state.cc">
+      <Filter>Source Files\lsl\runtime\world\script</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lsl\filebuf.hh">

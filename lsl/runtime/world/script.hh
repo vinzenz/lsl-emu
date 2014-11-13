@@ -67,6 +67,7 @@ struct Script {
         current_state = "default";
     }
 };
+typedef std::shared_ptr<Script> ScriptPtr;
 
 }}}
 
