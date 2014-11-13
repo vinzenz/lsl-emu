@@ -3,6 +3,7 @@
 #include <lsl/ast/printer.hh>
 #include <lsl/runtime/types.hh>
 #include <lsl/runtime/world/script.hh>
+#include <lsl/runtime/world/simulator.hh>
 int main(int argc, char const **argv)
 {
     if(argc < 2) {
@@ -57,6 +58,7 @@ int main(int argc, char const **argv)
     lsl::ast::PrinterState ps{0};
     lsl::ast::print(ps, scr);
     */
+#if 0
     using namespace lsl::runtime::script;
     using lsl::runtime::ValueType;
     auto llSay = CompiledScriptFunction{
@@ -73,6 +75,10 @@ int main(int argc, char const **argv)
 
     script.dispatch_event("state_entry", {});
     script.dispatch_event("state_exit", {});
+#endif
+
+    lsl::runtime::Simulator simulator;
+
 
     return parse_result ? EXIT_SUCCESS : EXIT_FAILURE;
 }

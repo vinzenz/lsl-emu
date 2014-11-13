@@ -3,7 +3,6 @@
 
 namespace lsl {
 namespace runtime {
-namespace script {
 
 template< typename ResultType >
 struct value_visitor : boost::static_visitor<ResultType> {
@@ -124,6 +123,4 @@ boost::reference_wrapper<ScriptValue> & ScriptValue::get_ref() {
     return boost::get<boost::reference_wrapper<ScriptValue>>(value);
 }
 
-}
-}
-}
+}}

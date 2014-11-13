@@ -7,7 +7,14 @@ namespace lsl {
 namespace runtime {
 
 struct LinkSet {
-    std::vector<Prim> prims;
+    LinkSet(PrimRef self)
+    : children()
+    {
+        children.push_back(self);
+        self.get().link_set = self.get().key;
+    }
+
+    std::vector<PrimRef> children;
 };
 
 }}
