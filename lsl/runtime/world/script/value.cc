@@ -1,5 +1,6 @@
 #include <lsl/runtime/world/script/value.hh>
 #include <lsl/runtime/world/script/value_convert.hh>
+#include <lsl/runtime/world/script/error.hh>
 
 namespace lsl {
 namespace runtime {
@@ -24,7 +25,7 @@ struct value_visitor : boost::static_visitor<ResultType> {
     typename std::enable_if<!boost::is_reference_wrapper<T>::value, ResultType>::type
     operator()(T const & v) const {
         ResultType r;
-        return convert(r, v);
+        return script::convert(r, v);
     }
 };
 
@@ -47,7 +48,7 @@ struct reference_visitor : boost::static_visitor<ResultType&> {
     typename std::enable_if<!std::is_same<ResultType, T>::value, ResultType>::type &
     operator()(boost::reference_wrapper<T> &) const {
         static ResultType t;
-        throw ScriptRuntimeError("Invalid instruction");
+        throw script::ScriptRuntimeError("Invalid instruction");
         return t;
     }
 
@@ -58,7 +59,7 @@ struct reference_visitor : boost::static_visitor<ResultType&> {
     template< typename T >
     typename std::enable_if<!boost::is_reference_wrapper<T>::value, ResultType>::type &
     operator()(T &) const {
-        throw ScriptRuntimeError("Invalid instruction");
+        throw script::ScriptRuntimeError("Invalid instruction");
         static ResultType t;
         return t;
     }
@@ -121,6 +122,32 @@ boost::reference_wrapper<ScriptValue::float_type> & ScriptValue::get_member_ref(
 
 boost::reference_wrapper<ScriptValue> & ScriptValue::get_ref() {
     return boost::get<boost::reference_wrapper<ScriptValue>>(value);
+}
+
+struct comparison_visitor : boost::static_visitor < bool > {
+    comparison_visitor(ScriptValue::value_type const & right)
+        : right_(right)
+    {}
+
+    template< typename T >
+    bool operator()(T const & left) const {
+        return left == boost::get<T>(right_.get());
+    }
+
+    bool operator()(boost::reference_wrapper<ScriptValue::float_type> const & left) const {
+        return left.get() == boost::get<boost::reference_wrapper<ScriptValue::float_type>>(right_.get()).get();
+    }
+
+    template< typename T >
+    bool operator()(boost::reference_wrapper<T> const & left) const {
+        return boost::apply_visitor(comparison_visitor(boost::get<boost::reference_wrapper<T>>(right_.get()).get().value), left.get().value);
+    }
+
+    boost::reference_wrapper<ScriptValue::value_type const> right_;
+};
+
+bool operator==(ScriptValue const & left, ScriptValue const & right) {
+    return boost::apply_visitor(comparison_visitor(right.value), left.value);
 }
 
 }}

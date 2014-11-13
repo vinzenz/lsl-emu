@@ -11,7 +11,7 @@ struct LinkSet {
     : children()
     {
         children.push_back(self);
-        self.get().link_set = self.get().key;
+        self.get().root = self.get().key;
     }
 
     std::vector<PrimRef> children;

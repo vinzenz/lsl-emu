@@ -3,6 +3,8 @@
 
 #include <lsl/runtime/vector.hh>
 #include <lsl/runtime/quaternion.hh>
+#include <boost/variant.hpp>
+#include <boost/ref.hpp>
 #include <sstream>
 
 namespace lsl {
@@ -100,6 +102,7 @@ struct ScriptValue {
     boost::reference_wrapper<float_type> & get_member_ref();
     boost::reference_wrapper<ScriptValue> & get_ref();
 };
+bool operator==(ScriptValue const & left, ScriptValue const & right);
 
 typedef ScriptValue::list_type List;
 

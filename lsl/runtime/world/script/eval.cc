@@ -90,35 +90,6 @@ struct float_extractor : boost::static_visitor < ScriptValue::float_type& > {
     }
 };
 
-bool operator==(ScriptValue const & left, ScriptValue const & right);
-
-struct comparison_visitor : boost::static_visitor < bool > {
-    comparison_visitor(ScriptValue::value_type const & right)
-    : right_(right)
-    {}
-
-    template< typename T >
-    bool operator()(T const & left) const {
-        return left == boost::get<T>(right_.get());
-    }
-
-    bool operator()(boost::reference_wrapper<ScriptValue::float_type> const & left) const {
-        return left.get() == boost::get<boost::reference_wrapper<ScriptValue::float_type>>(right_.get()).get();
-    }
-
-    template< typename T >
-    bool operator()(boost::reference_wrapper<T> const & left) const {
-        return boost::apply_visitor(comparison_visitor(boost::get<boost::reference_wrapper<T>>(right_.get()).get().value), left.get().value);
-    }
-
-    boost::reference_wrapper<ScriptValue::value_type const> right_;
-};
-
-bool operator==(ScriptValue const & left, ScriptValue const & right) {
-    return boost::apply_visitor(comparison_visitor(right.value), left.value);
-}
-
-
 CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::AstPtr a);
 CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::Ast const & a);
 
@@ -1628,12 +1599,12 @@ CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::Ast const & a
     case AstType::Vector: return eval_expr(script, scope, static_cast<lsl::Vector const &>(a)); break;
     case AstType::Call: return eval_expr(script, scope, static_cast<Call const &>(a)); break;
     case AstType::Quaternion: return eval_expr(script, scope, static_cast<lsl::Quaternion const &>(a)); break;
-    case AstType::Key: return eval_expr(script, scope, static_cast<Key const &>(a)); break;
+    case AstType::Key: return eval_expr(script, scope, static_cast<lsl::Key const &>(a)); break;
     case AstType::String: return eval_expr(script, scope, static_cast<StringLit const &>(a)); break;
-    case AstType::Integer: return eval_expr(script, scope, static_cast<Integer const &>(a)); break;
-    case AstType::Float: return eval_expr(script, scope, static_cast<Float const &>(a)); break;
+    case AstType::Integer: return eval_expr(script, scope, static_cast<lsl::Integer const &>(a)); break;
+    case AstType::Float: return eval_expr(script, scope, static_cast<lsl::Float const &>(a)); break;
     case AstType::Variable: return eval_expr(script, scope, static_cast<lsl::Variable const &>(a)); break;
-    case AstType::List: return eval_expr(script, scope, static_cast<List const &>(a)); break;
+    case AstType::List: return eval_expr(script, scope, static_cast<lsl::List const &>(a)); break;
     case AstType::BinOp: return eval_expr(script, scope, static_cast<BinOp const &>(a)); break;
     case AstType::BoolOp: return eval_expr(script, scope, static_cast<BoolOp const &>(a)); break;
     case AstType::UnaryOp: return eval_expr(script, scope, static_cast<UnaryOp const &>(a)); break;
