@@ -1113,14 +1113,14 @@ bool states(State & s, States & states) {
     if(!default_state(s, defstate)) {
         return false;
     }
-    states.states.push_back(defstate);
+    states.states.push_back(std::static_pointer_cast<StateDef>(defstate));
 
     while(!is(s, Token::End)) {
         AstPtr ste;
         if(!state(s, ste)) {
             return false;
         }
-        states.states.push_back(ste);
+        states.states.push_back(std::static_pointer_cast<StateDef>(ste));
     }
     return guard.commit();
 }

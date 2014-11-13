@@ -26,7 +26,7 @@ struct ScriptFunction {
         return compiled.result_type;
     }
 
-    CallResult call(ScriptFunctionCall const & call) {
+    CallResult call(ScriptFunctionCall const & call) const {
         return compiled.function(call);
     }
 };

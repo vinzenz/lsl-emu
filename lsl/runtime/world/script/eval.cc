@@ -1,6 +1,7 @@
 #include <lsl/runtime/world/script/eval.hh>
 #include <lsl/runtime/world/script.hh>
 #include <lsl/runtime/world/script/error.hh>
+#include <lsl/ast/api.hh>
 #include <cassert>
 #include <unordered_map>
 namespace lsl {
@@ -21,7 +22,7 @@ struct ScopeVariables {
     typedef boost::optional<boost::reference_wrapper<ScopeVariables>> reference_type;
     reference_type parent_;
     std::unordered_map<String, ScriptValue> storage_;
-    
+
     ScopeVariables(boost::optional<boost::reference_wrapper<ScopeVariables>> parent = {})
     : parent_(parent)
     , storage_()
@@ -52,7 +53,7 @@ struct ScopeVariables {
 };
 
 struct Scope {
-    
+
     Scope(Ast const & ast, ScriptRef script, boost::optional<boost::reference_wrapper<Scope>> parent = {})
     : parent(parent)
     , script(script)
@@ -62,9 +63,9 @@ struct Scope {
     , ast(ast)
     , return_type(parent ? parent.get().get().return_type : "")
     {}
-        
+
     boost::optional<boost::reference_wrapper<Scope>> parent;
-    ScriptRef script; // For globals and functions and changing state    
+    ScriptRef script; // For globals and functions and changing state
     ScopeVariables locals;
     std::unordered_map<String, size_t>      label_position;
     std::vector<CompiledExpression>         statements;
@@ -100,7 +101,7 @@ struct comparison_visitor : boost::static_visitor < bool > {
     bool operator()(T const & left) const {
         return left == boost::get<T>(right_.get());
     }
-    
+
     bool operator()(boost::reference_wrapper<ScriptValue::float_type> const & left) const {
         return left.get() == boost::get<boost::reference_wrapper<ScriptValue::float_type>>(right_.get()).get();
     }
@@ -177,7 +178,17 @@ bool as_condition(ScriptValue & value) {
 }
 
 CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::Call const & v) {
-    auto fun = script.get().functions[v.name];
+    auto fun = ScriptFunctionPtr();
+    if(script.get().functions.count(v.name)) {
+        fun = script.get().functions[v.name];
+    }
+    else if(script.get().library.functions.count(v.name)) {
+        fun = script.get().library.functions[v.name];
+    }
+    else {
+        throw ScriptError(format("Call to unknown function '%s'", v.name.c_str()), v.line, v.column);
+    }
+
     std::vector<CompiledExpression> arguments;
     arguments.reserve(v.parameters.size());
     for(auto const & arg : v.parameters) {
@@ -210,7 +221,7 @@ CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::Call const & 
 CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::If const & v) {
     auto condition = eval_expr(script, scope, v.condition);
     auto child_scope1 = Scope(v, script, boost::ref(scope));
-    auto body = eval_expr(script, child_scope1, v.condition);
+    auto body = eval_expr(script, child_scope1, v.body);
     auto child_scope2 = Scope(v, script, boost::ref(scope));
     auto elseif = v.elseIf ? eval_expr(script, child_scope2, v.elseIf) : CompiledExpression();
     return{
@@ -353,13 +364,15 @@ CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::TypeCast cons
             case  ValueType::Vector:
                 result.value = exec.as_vector();
                 break;
+            default:
+                throw ScriptRuntimeError("Invalid instruction");
             }
             return result;
         }
     };
 }
 
-CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::Jump const & v) {
+CompiledExpression eval_expr(ScriptRef /*script*/, Scope & /*scope*/, lsl::Jump const & /*v*/) {
     throw ScriptError("Jump & Labels are not implemented");
     return{
         ValueType::Void,
@@ -368,7 +381,7 @@ CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::Jump const & 
     };
 }
 
-CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::Label const & v) {
+CompiledExpression eval_expr(ScriptRef /*script*/, Scope & /*scope*/, lsl::Label const & /*v*/) {
     throw ScriptError("Jump & Labels are not implemented");
     return{
         ValueType::Void,
@@ -405,7 +418,8 @@ CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::VarDecl const
     ScriptValue value;
     value.reference = true;
     init_with_type(value, v.type_name);
-    
+    scope.locals.local(name) = value;
+
     if(v.right) {
         auto right = eval_expr(script, scope, v.right);
         bool flt = right.result_type == ValueType::Float;
@@ -449,7 +463,7 @@ CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::VarDecl const
         ValueType::Void,
         false,
         [value, name](Scope & scope) -> CallResult {
-            scope.locals.local(name) = value;            
+            scope.locals.local(name) = value;
             return CallResult();
         }
     };
@@ -457,34 +471,8 @@ CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::VarDecl const
     // scope.local(v.name);
 
 }
-    
-struct FunctionReturnException {
-    FunctionReturnException(CallResult result)
-    : result_(result)
-    {}
 
-    CallResult const & result() const {
-        return result_;
-    }
-
-protected:
-    CallResult result_;
-};
-
-struct StateChangeException {
-    StateChangeException(String name)
-    : state_(name)
-    {}
-
-    String const & state() const {
-        return state_;
-    }
-protected:
-    String state_;
-};
-
-
-CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::StateChange const & v) {
+CompiledExpression eval_expr(ScriptRef script, Scope & /*scope*/, lsl::StateChange const & v) {
     String state = v.state;
     if(!script.get().states.count(state)) {
         throw ScriptError(format("state '%s' not defined", state.c_str()), v.line, v.column);
@@ -617,7 +605,7 @@ CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::Return const 
     return{
         ValueType::Void,
         false,
-        [](Scope & scope) -> CallResult {
+        [](Scope & /*scope*/) -> CallResult {
             throw FunctionReturnException(CallResult());
             return CallResult();
         }
@@ -688,7 +676,7 @@ CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::Assignment co
             k = true;
             break;
         default:
-            break;                
+            break;
         }
 
         switch(right.result_type) {
@@ -705,7 +693,7 @@ CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::Assignment co
             }
         break;
         default:
-            throw ScriptError("Type mismatch", v.line, v.column);            
+            throw ScriptError("Type mismatch", v.line, v.column);
         }
     }
 
@@ -721,7 +709,7 @@ CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::Assignment co
                 l.get_ref().get().value = r.as_integer();
                 result.value = l.get_ref().get().value;
                 break;
-            case ValueType::Float:                
+            case ValueType::Float:
                 result.value = boost::apply_visitor(float_extractor(), l.value) = r.as_float();
                 break;
             case ValueType::Key:
@@ -754,7 +742,7 @@ CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::Assignment co
         }
     };
 }
-    
+
 ScriptValue::list_type append_copy(ScriptValue::list_type const & left, ScriptValue::list_type const & right) {
     ScriptValue::list_type result = left;
     result.insert(result.end(), right.begin(), right.end());
@@ -1395,7 +1383,7 @@ CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::UnaryOp const
         }
     }
     else {
-        if(target.result_type != ValueType::Integer || target.result_type != ValueType::Float) {
+        if(target.result_type != ValueType::Integer && target.result_type != ValueType::Float) {
             throw ScriptError("Type mismatch - Only integer and float types can use this operator", v.line, v.column);
         }
         switch(op) {
@@ -1612,6 +1600,23 @@ CompiledExpression eval_expr(ScriptRef, Scope &, lsl::Float const & v) {
     };
 }
 
+CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::Body const & v) {
+    auto statements = std::vector<CompiledExpression>();
+    statements.reserve(v.statements.size());
+    for(auto const & s : v.statements) {
+        statements.emplace_back(std::move(eval_expr(script, scope, s)));
+    }
+    return {
+        ValueType::Void,
+        false,
+        [statements](Scope & scope) -> CallResult {
+            for( auto const & s : statements ) {
+                s.compiled(scope);
+            }
+            return CallResult();
+        }
+    };
+}
 
 CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::Ast const & a) {
     switch(a.type) {
@@ -1642,6 +1647,7 @@ CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::Ast const & a
     case AstType::Do: return eval_expr(script, scope, static_cast<Do const &>(a)); break;
     case AstType::If: return eval_expr(script, scope, static_cast<If const &>(a)); break;
     case AstType::Return: return eval_expr(script, scope, static_cast<Return const &>(a)); break;
+    case AstType::Body: return eval_expr(script, scope, static_cast<Body const &>(a)); break;
     default:
         assert(false);
     }
@@ -1652,16 +1658,158 @@ CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::AstPtr a) {
     return eval_expr(script, scope, *a);
 }
 
-
 CompiledScriptFunction
 eval_function(
     ScriptRef script,
-    lsl::Function const & ast)
+    lsl::Function const & ast_)
 {
+    auto ast = lsl::Function(ast_);
     CompiledScriptFunction result;
 
+    if(script.get().functions.count(ast.name)) { // || script.get().library.functions(ast.name)) {
+        throw ScriptError(format("Function '%s' was already previously declared", ast.name.c_str()), ast.line, ast.column);
+    }
+
+    auto scope = Scope(ast, script);
+    for(auto const & arg : ast.args) {
+        if(scope.locals.count_local(arg.name)) {
+            throw ScriptError(format("Name '%s' previously declared within scope", ast.name.c_str()), ast.line, ast.column);
+        }
+        ScriptValue value;
+        value.reference = false;
+        init_with_type(value, arg.type);
+        scope.locals.local(arg.name) = value;
+        result.parameters.push_back(value.type);
+    }
+
+    ValueType return_type = ValueType::Void;
+    if(!ast.returnType.empty()) {
+        ScriptValue value;
+        init_with_type(value, ast.returnType);
+        return_type = value.type;
+    }
+
+    auto body = eval_expr(script, scope, ast.body);
+
+    result.result_type = return_type;
+    result.function = [ast, body](ScriptFunctionCall const & call) -> CallResult {
+        if(call.arguments.size() != ast.args.size()) {
+            throw ScriptError(format("Attempted to call function '%s' with invalid number of parameters", ast.name.c_str()), ast.line, ast.column);
+        }
+
+        auto scope = Scope(ast, call.caller);
+        for(size_t i = 0; i < call.arguments.size(); ++i) {
+            scope.locals.local(ast.args[i].name) = call.arguments[i];
+        }
+
+        try {
+            body.compiled(scope);
+        }
+        catch(FunctionReturnException const & e) {
+            return e.result();
+        }
+
+        return CallResult();
+    };
 
     return result;
 }
+
+
+CompiledScriptFunction
+eval_event(
+    ScriptRef script,
+    State & state,
+    lsl::Event const & ast_)
+{
+    auto ast = lsl::Event(ast_);
+    CompiledScriptFunction result;
+    if(!get_event_repository().count(ast.name)) {
+        throw ScriptError(format("Event '%s' is not a valid event", ast.name.c_str()), ast.line, ast.column);
+    }
+    if(state.events.count(ast.name)) {
+        throw ScriptError(format("Event '%s' was already previously defined", ast.name.c_str()), ast.line, ast.column);
+    }
+
+    auto scope = Scope(ast, script);
+    auto eventdef = get_event_repository()[ast.name];
+    for(auto const & arg : ast.args) {
+        if(scope.locals.count_local(arg.name)) {
+            throw ScriptError(format("Name '%s' previously declared within scope", ast.name.c_str()), ast.line, ast.column);
+        }
+        ScriptValue value;
+        value.reference = false;
+        init_with_type(value, arg.type);
+        scope.locals.local(arg.name) = value;
+        if(eventdef.parameters[result.parameters.size()] != value.type) {
+            throw ScriptError(format("Wrong type for parameter '%s'", arg.name.c_str()), ast.line, ast.column);
+        }
+        result.parameters.push_back(value.type);
+    }
+
+    auto body = eval_expr(script, scope, ast.body);
+
+    result.result_type = ValueType::Void;
+    result.function = [ast, body](ScriptFunctionCall const & call) -> CallResult {
+        if(call.arguments.size() != ast.args.size()) {
+            throw ScriptError(format("Attempted to call function '%s' with invalid number of parameters", ast.name.c_str()), ast.line, ast.column);
+        }
+
+        auto scope = Scope(ast, call.caller);
+        for(size_t i = 0; i < call.arguments.size(); ++i) {
+            scope.locals.local(ast.args[i].name) = call.arguments[i];
+        }
+
+        try {
+            body.compiled(scope);
+        }
+        catch(FunctionReturnException const & e) {
+            return e.result();
+        }
+
+        return CallResult();
+    };
+
+    return result;
+}
+
+StatePtr eval_state(
+    ScriptRef script,
+    lsl::StateDef const & ast_)
+{
+    auto state = std::make_shared<State>(ast_.name, script);
+
+    for(auto const & e : ast_.events) {
+        state->events[e.name] = eval_event(script, *state, e);
+    }
+
+    return state;
+}
+
+Script eval_script(String const & prim_key, lsl::Script const & ast) {
+    Script script(prim_key);
+    auto scope = Scope(ast, boost::ref(script));
+    for(auto const & constant : get_global_variables(ast)) {
+        script.globals[constant.name];
+        if(constant.right) {
+            auto value = eval_expr(boost::ref(script), scope, constant.right);
+            script.globals[constant.name] = value.compiled(scope).get();
+        }
+    }
+    for(auto const & fun : get_functions(ast)) {
+        script.functions[fun.name] = std::make_shared<ScriptFunction>(eval_function(boost::ref(script), fun));
+    }
+
+    for(auto const & state : ast.states.states) {
+        script.states[state->name];
+    }
+
+    for(auto const & state : ast.states.states) {
+        script.states[state->name] = eval_state(boost::ref(script), *state);
+    }
+
+    return script;
+}
+
 
 }}}

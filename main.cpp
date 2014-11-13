@@ -53,9 +53,26 @@ int main(int argc, char const **argv)
     printf("qv  %s\n", to_string(qv).c_str());
     printf("rv  %s\n", to_string(rv).c_str());
     */
-
+    /*
     lsl::ast::PrinterState ps{0};
     lsl::ast::print(ps, scr);
+    */
+    using namespace lsl::runtime::script;
+    using lsl::runtime::ValueType;
+    auto llSay = CompiledScriptFunction{
+        ValueType::Void,
+        {ValueType::Integer, ValueType::String},
+        [](ScriptFunctionCall const & args) -> CallResult {
+            printf("llSay: %s\n", args.arguments[1].as_string().c_str());
+            return CallResult();
+        }
+    };
+    get_script_library().functions["llSay"] = std::make_shared<ScriptFunction>(llSay);
+
+    auto script = eval_script("Fake", scr);
+
+    script.dispatch_event("state_entry", {});
+    script.dispatch_event("state_exit", {});
 
     return parse_result ? EXIT_SUCCESS : EXIT_FAILURE;
 }

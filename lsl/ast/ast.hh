@@ -26,7 +26,6 @@ enum class AstType {
     BoolOp,
     Assignment,
     AugAssignment,
-    Identifier,
     Comparison,
     For,
     While,
@@ -265,7 +264,7 @@ struct StateDef : AstT<AstType::State> {
 };
 
 struct States : AstT<AstType::States> {
-    std::vector<AstPtr> states;
+    std::vector<std::shared_ptr<StateDef>> states;
 };
 
 struct Globals : AstT<AstType::Globals> {

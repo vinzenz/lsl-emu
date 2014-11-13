@@ -4,23 +4,44 @@
 #include <unordered_map>
 #include <lsl/runtime/world/script/call.hh>
 #include <lsl/runtime/world/script_fwd.hh>
+#include <lsl/runtime/world/script/eval.hh>
+#include <tuple>
+
+
 namespace lsl {
 namespace runtime {
 namespace script {
 
-typedef std::function<void(ScriptFunctionCall const &)> EventType;
+typedef std::tuple<ValueType, std::vector<ValueType>> Signature;
 
-inline EventType event_dummy(String name) {
-    return [=](ScriptFunctionCall const &) {
-        printf("Non defined event '%s' called", name.c_str());
+template< typename... Args>
+Signature extract_signature(ValueType returns, Args... args) {
+    return Signature{
+        returns, {args...}
     };
 }
+
+template< typename... Args>
+inline CompiledScriptFunction make_event(String name, Args... args) {
+    auto sig = extract_signature(ValueType::Void, args...);
+    return {
+        std::get<0>(sig),
+        std::get<1>(sig),
+        [name](ScriptFunctionCall const &) -> CallResult {
+            printf("Non defined event '%s' called\n", name.c_str());
+            return CallResult();
+        }
+    };
+}
+
+
+std::unordered_map<String, CompiledScriptFunction> & get_event_repository();
 
 struct State {
 
     String name;
     ScriptRef script;
-    std::unordered_map<String, EventType> events;
+    std::unordered_map<String, CompiledScriptFunction> events;
 
     State(String const & name, ScriptRef s)
     : name(name)
@@ -28,12 +49,12 @@ struct State {
     , events()
     {}
 
-    void dispatch_event(String const & event, ScriptFunctionCall const & call) {
+    void dispatch_event(String const & event, ScriptValue::list_type const & arguments) {
         if(events.count(event)) {
-            events[event](call);
+            events[event].function({script, arguments});
         }
         else {
-            event_dummy(event)(call);
+            get_event_repository()[event].function({script, arguments});
         }
     }
 
