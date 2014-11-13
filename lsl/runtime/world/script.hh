@@ -15,7 +15,7 @@ struct Script {
     std::unordered_map<String, ScriptFunctionPtr>   functions;
     std::unordered_map<String, StatePtr>            states;
     String                                          current_state;
-    String                                          prim_key;
+    String                                          prim_key;    
 
     Script(String const & prim_key)
     : globals()
@@ -23,7 +23,9 @@ struct Script {
     , states()
     , current_state("default")
     , prim_key(prim_key)
-    {}
+    {
+        
+    }
 
     StatePtr get_state() {
         return states[current_state];

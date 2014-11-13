@@ -11,10 +11,14 @@ namespace lsl {
 namespace runtime {
 namespace script {
 
-typedef boost::optional<ScriptValue> CallResult;
-typedef std::function<CallResult(ScriptRef script, ScriptContext const & context, ScriptFunctionCall const & call)> CompiledScriptCall;
+struct CompiledScriptFunction {
+    ValueType result_type;
+    std::vector<ValueType> parameters;
+    std::function<CallResult(ScriptFunctionCall const &)> function;
+};
 
-CompiledScriptCall eval_call(ScriptRef script, lsl::Function const & ast, ScriptFunctionCall const & call);
+
+CompiledScriptFunction eval_function(ScriptRef script, lsl::Function const & ast);
 }}}
 
 #endif //GUARD_LSL_RUNTIME_WORLD_SCRIPT_EVAL_HH_INCLUDED

@@ -124,6 +124,9 @@ namespace runtime {
         return sub(a, b);
     }
 
+    inline bool operator == (Vector const & a, Vector const & b) {
+        return a.x == b.x && a.y == b.y && a.z == b.z;
+    }
 }}
 
 #endif //GUARD_LSL_RUNTIME_VECTOR_HH_INCLUDED

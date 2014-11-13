@@ -25,6 +25,8 @@
     <ClCompile Include="..\lsl\lexer\lexer.cc" />
     <ClCompile Include="..\lsl\parser\make_string.cc" />
     <ClCompile Include="..\lsl\parser\parser.cc" />
+    <ClCompile Include="..\lsl\runtime\world\script\eval.cc" />
+    <ClCompile Include="..\lsl\runtime\world\script\value.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lsl\ast\api.hh" />
@@ -49,6 +51,16 @@
     <ClInclude Include="..\lsl\runtime\world\object.hh" />
     <ClInclude Include="..\lsl\runtime\world\prim.hh" />
     <ClInclude Include="..\lsl\runtime\world\script.hh" />
+    <ClInclude Include="..\lsl\runtime\world\script\call.hh" />
+    <ClInclude Include="..\lsl\runtime\world\script\constants.hh" />
+    <ClInclude Include="..\lsl\runtime\world\script\context.hh" />
+    <ClInclude Include="..\lsl\runtime\world\script\error.hh" />
+    <ClInclude Include="..\lsl\runtime\world\script\eval.hh" />
+    <ClInclude Include="..\lsl\runtime\world\script\function.hh" />
+    <ClInclude Include="..\lsl\runtime\world\script\state.hh" />
+    <ClInclude Include="..\lsl\runtime\world\script\type_info.hh" />
+    <ClInclude Include="..\lsl\runtime\world\script\value.hh" />
+    <ClInclude Include="..\lsl\runtime\world\script\value_convert.hh" />
     <ClInclude Include="..\lsl\runtime\world\simulator.hh" />
     <ClInclude Include="..\lsl\types.hh" />
   </ItemGroup>

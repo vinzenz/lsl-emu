@@ -97,8 +97,8 @@ struct Ast {
     Ast() : type(), line(), column() {}
 
     AstType type;
-    uint64_t line;
-    uint64_t column;
+    uint32_t line;
+    uint32_t column;
 };
 typedef std::shared_ptr<Ast> AstPtr;
 

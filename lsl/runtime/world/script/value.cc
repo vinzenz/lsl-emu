@@ -81,4 +81,14 @@ ScriptValue::list_type & ScriptValue::get_list() {
     return boost::get<ScriptValue::list_type>(value);
 }
 
-}}}
+boost::reference_wrapper<ScriptValue::float_type> & ScriptValue::get_member_ref() {
+    return boost::get<boost::reference_wrapper<ScriptValue::float_type>>(value);
+}
+
+boost::reference_wrapper<ScriptValue> & ScriptValue::get_ref() {
+    return boost::get<boost::reference_wrapper<ScriptValue>>(value);
+}
+
+}
+}
+}

@@ -70,16 +70,6 @@ struct Value {
     Quaternion  r;
 };
 
-struct Scope {
-};
-
-struct Function {
-    std::string           name;
-    ValueType             returns;
-    std::vector<Variable> signature;
-    Scope                 body;
-};
-
 }}
 
 #endif //GUARD_LSL_RUNTIME_TYPES_HH_INCLUDED

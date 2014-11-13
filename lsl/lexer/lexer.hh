@@ -26,8 +26,8 @@ namespace lsl {
 
 struct TokenInfo {
     TokenIdent ident;
-    uint64_t line;
-    uint64_t column;
+    uint32_t line;
+    uint32_t column;
     std::string value;
 };
 

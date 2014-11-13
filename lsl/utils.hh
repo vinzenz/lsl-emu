@@ -8,7 +8,11 @@ namespace lsl {
     template< typename... Args >
     std::string format(char const * fmt, Args... args) {
         char buffer[1024] = {0};
+#if defined(WIN32)
+        sprintf_s(buffer, 1024, fmt, args...);        
+#else
         sprintf(buffer, fmt, args...);
+#endif
         return buffer;
     }
 }

@@ -25,9 +25,10 @@ struct ScriptValue {
         float_type,
         boost::reference_wrapper<ScriptValue>,// References to Variables global or local
         boost::reference_wrapper<float_type>, // Members of Vector or Quaternion
-        std::vector<boost::recursive_variant_>>::type value_type;
+        std::vector<ScriptValue>
+    >::type value_type;
 
-    typedef std::vector<value_type> list_type;
+    typedef std::vector<ScriptValue> list_type;
 
     ValueType   type;
     value_type  value;
@@ -47,6 +48,8 @@ struct ScriptValue {
     integer_type & get_integer();
     float_type & get_float();
     list_type & get_list();
+    boost::reference_wrapper<float_type> & get_member_ref();
+    boost::reference_wrapper<ScriptValue> & get_ref();
 };
 
 }}}

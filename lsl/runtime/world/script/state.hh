@@ -3,7 +3,7 @@
 
 #include <unordered_map>
 #include <lsl/runtime/world/script/call.hh>
-
+#include <lsl/runtime/world/script_fwd.hh>
 namespace lsl {
 namespace runtime {
 namespace script {
@@ -16,14 +16,13 @@ inline EventType event_dummy(String name) {
     };
 }
 
-struct Script;
 struct State {
 
     String name;
-    std::reference_wrapper<Script> script;
+    ScriptRef script;
     std::unordered_map<String, EventType> events;
 
-    State(String const & name, std::reference_wrapper<Script> s)
+    State(String const & name, ScriptRef s)
     : name(name)
     , script(s)
     , events()
