@@ -73,7 +73,7 @@ namespace runtime {
             l.z / r
         };
     }
-    
+
     inline Vector cross(Vector l, Vector r) {
         return Vector{
             l.y * r.z - l.z * r.y,
@@ -122,6 +122,10 @@ namespace runtime {
     }
     inline Vector operator - (Vector const & a, double b) {
         return sub(a, b);
+    }
+
+    inline double dist(Vector l, Vector r) {
+        return mag(l - r);
     }
 
     inline bool operator == (Vector const & a, Vector const & b) {

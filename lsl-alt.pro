@@ -22,7 +22,10 @@ SOURCES += main.cpp \
     lsl/parser/make_string.cc \
     lsl/runtime/world/script/value.cc \
     lsl/runtime/world/script/eval.cc \
-    lsl/runtime/world/script/state.cc
+    lsl/runtime/world/script/state.cc \
+    lsl/runtime/library/functions.cc \
+    lsl/runtime/library/math.cc \
+    lsl/runtime/library/string.cc
 
 include(deployment.pri)
 qtcAddDeployment()

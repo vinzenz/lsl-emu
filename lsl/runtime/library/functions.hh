@@ -1,29 +1,103 @@
 #ifndef GUARD_LSL_RUNTIME_LIBRARY_FUNCTIONS_HH_INCLUDED
 #define GUARD_LSL_RUNTIME_LIBRARY_FUNCTIONS_HH_INCLUDED
 
+#include <lsl/runtime/types.hh>
+#include <lsl/runtime/world/script_fwd.hh>
+
+namespace lsl {
+namespace runtime {
+namespace lib {
+
+using script::ScriptRef;
+
+// Math
+Float llSin(ScriptRef, Float);
+Float llCos(ScriptRef, Float);
+Float llTan(ScriptRef, Float);
+Float llAtan2(ScriptRef, Float);
+Float llSqrt(ScriptRef, Float);
+Float llPow(ScriptRef, Float);
+Integer llAbs(ScriptRef, Integer);
+Float llFabs(ScriptRef, Float);
+Integer llFloor(ScriptRef, Float);
+Integer llCeil(ScriptRef, Float);
+Integer llRound(ScriptRef, Float);
+Float llAcos(ScriptRef, Float);
+Float llAsin(ScriptRef, Float);
+Rotation llAxes2Rot(Vector a, Vector b, Vector c);
+
+Float llVecMag(ScriptRef, Vector);
+Vector llVecNorm(ScriptRef, Vector);
+Float llVecDist(ScriptRef, Vector, Vector);
+
+Vector llRot2Euler(ScriptRef, Rotation);
+Rotation llEuler2Rot(ScriptRef, Vector);
+Vector llRot2Fwd(ScriptRef, Rotation);
+Vector llRot2Left(ScriptRef, Rotation);
+Vector llRot2Up(ScriptRef, Rotation);
+
+Rotation llRotBetween(ScriptRef, Vector, Vector);
+
+// addFunction(10.f, 0.f, dummy_func, "llAxisAngle2Rot", "q", "vf");
+// addFunction(10.f, 0.f, dummy_func, "llRot2Axis", "v", "q");
+// addFunction(10.f, 0.f, dummy_func, "llRot2Angle", "f", "q");
+// addFunction(10.f, 0.f, dummy_func, "llAngleBetween", "f", "qq");
+//addFunction(10.f, 0.f, dummy_func, "llLog10", "f", "f");
+//addFunction(10.f, 0.f, dummy_func, "llLog", "f", "f");
+
+
+// Misc
+Float llFrand(ScriptRef, Float);
+
+
+// String
+String llGetSubString(ScriptRef, String, Integer, Integer);
+String llDeleteSubString(ScriptRef, String, Integer, Integer);
+String llInsertString(ScriptRef, String, Integer, String);
+String llToUpper(ScriptRef, String);
+String llToLower(ScriptRef, String);
+Integer llSubStringIndex(ScriptRef, String, String);
+
+String llIntegerToBase64(ScriptRef, Integer);
+Integer llBase64ToInteger(ScriptRef, String);
+
+String llStringToBase64(ScriptRef, String);
+String llBase64ToString(ScriptRef, String);
+
+String llMD5String(ScriptRef, String, Integer);
+String llSHA1String(ScriptRef, String, Integer);
+
+String llXorBase64Strings(ScriptRef, String, String);
+String llXorBase64StringsCorrect(ScriptRef, String, String);
+
+
+// List
+//addFunction(10.f, 0.f, dummy_func, "llListSort", "l", "lii");
+//addFunction(10.f, 0.f, dummy_func, "llGetListLength", "i", "l");
+//addFunction(10.f, 0.f, dummy_func, "llList2Integer", "i", "li");
+//addFunction(10.f, 0.f, dummy_func, "llList2Float", "f", "li");
+//addFunction(10.f, 0.f, dummy_func, "llList2String", "s", "li");
+//addFunction(10.f, 0.f, dummy_func, "llList2Key", "k", "li");
+//addFunction(10.f, 0.f, dummy_func, "llList2Vector", "v", "li");
+//addFunction(10.f, 0.f, dummy_func, "llList2Rot", "q", "li");
+//addFunction(10.f, 0.f, dummy_func, "llList2List", "l", "lii");
+//addFunction(10.f, 0.f, dummy_func, "llDeleteSubList", "l", "lii");
+//addFunction(10.f, 0.f, dummy_func, "llGetListEntryType", "i", "li");
+//addFunction(10.f, 0.f, dummy_func, "llList2CSV", "s", "l");
+//addFunction(10.f, 0.f, dummy_func, "llCSV2List", "l", "s");
+//addFunction(10.f, 0.f, dummy_func, "llListRandomize", "l", "li");
+//addFunction(10.f, 0.f, dummy_func, "llList2ListStrided", "l", "liii");
+//addFunction(10.f, 0.f, dummy_func, "llListInsertList", "l", "lli");
+//addFunction(10.f, 0.f, dummy_func, "llListFindList", "i", "ll");
+//addFunction(10.f, 0.f, dummy_func, "llParseString2List", "l", "sll");
+//addFunction(10.f, 0.f, dummy_func, "llDumpList2String", "s", "ls");
+//addFunction(10.f, 0.f, dummy_func, "llParseStringKeepNulls", "l", "sll");
+
+
+
+}}}
+
 #if 0
-addFunction(10.f, 0.f, dummy_func, "llSin", "f", "f");
-addFunction(10.f, 0.f, dummy_func, "llCos", "f", "f");
-addFunction(10.f, 0.f, dummy_func, "llTan", "f", "f");
-addFunction(10.f, 0.f, dummy_func, "llAtan2", "f", "ff");
-addFunction(10.f, 0.f, dummy_func, "llSqrt", "f", "f");
-addFunction(10.f, 0.f, dummy_func, "llPow", "f", "ff");
-addFunction(10.f, 0.f, dummy_func, "llAbs", "i", "i");
-addFunction(10.f, 0.f, dummy_func, "llFabs", "f", "f");
-addFunction(10.f, 0.f, dummy_func, "llFrand", "f", "f");
-addFunction(10.f, 0.f, dummy_func, "llFloor", "i", "f");
-addFunction(10.f, 0.f, dummy_func, "llCeil", "i", "f");
-addFunction(10.f, 0.f, dummy_func, "llRound", "i", "f");
-addFunction(10.f, 0.f, dummy_func, "llVecMag", "f", "v");
-addFunction(10.f, 0.f, dummy_func, "llVecNorm", "v", "v");
-addFunction(10.f, 0.f, dummy_func, "llVecDist", "f", "vv");
-addFunction(10.f, 0.f, dummy_func, "llRot2Euler", "v", "q");
-addFunction(10.f, 0.f, dummy_func, "llEuler2Rot", "q", "v");
-addFunction(10.f, 0.f, dummy_func, "llAxes2Rot", "q", "vvv");
-addFunction(10.f, 0.f, dummy_func, "llRot2Fwd", "v", "q");
-addFunction(10.f, 0.f, dummy_func, "llRot2Left", "v", "q");
-addFunction(10.f, 0.f, dummy_func, "llRot2Up", "v", "q");
-addFunction(10.f, 0.f, dummy_func, "llRotBetween", "q", "vv");
 addFunction(10.f, 0.f, dummy_func, "llWhisper", NULL, "is");
 addFunction(10.f, 0.f, dummy_func, "llSay", NULL, "is");
 addFunction(10.f, 0.f, dummy_func, "llShout", NULL, "is");
@@ -96,11 +170,7 @@ addFunction(10.f, 0.f, dummy_func, "llPlaySoundSlave", NULL, "sf");
 addFunction(10.f, 0.f, dummy_func, "llTriggerSound", NULL, "sf");
 addFunction(10.f, 0.f, dummy_func, "llStopSound", NULL, "");
 addFunction(10.f, 1.f, dummy_func, "llPreloadSound", NULL, "s");
-addFunction(10.f, 0.f, dummy_func, "llGetSubString", "s", "sii");
-addFunction(10.f, 0.f, dummy_func, "llDeleteSubString", "s", "sii");
-addFunction(10.f, 0.f, dummy_func, "llInsertString", "s", "sis");
-addFunction(10.f, 0.f, dummy_func, "llToUpper", "s", "s");
-addFunction(10.f, 0.f, dummy_func, "llToLower", "s", "s");
+
 addFunction(10.f, 0.f, dummy_func, "llGiveMoney", "i", "ki");
 addFunction(10.f, 0.1f, dummy_func, "llMakeExplosion", NULL, "iffffsv");
 addFunction(10.f, 0.1f, dummy_func, "llMakeFountain", NULL, "iffffisvf");
@@ -171,39 +241,17 @@ addFunction(10.f, 0.f, dummy_func, "llPushObject", NULL, "kvvi");
 addFunction(10.f, 0.f, dummy_func, "llPassCollisions", NULL, "i");
 addFunction(10.f, 0.f, dummy_func, "llGetScriptName", "s", NULL);
 addFunction(10.f, 0.f, dummy_func, "llGetNumberOfSides", "i", NULL);
-addFunction(10.f, 0.f, dummy_func, "llAxisAngle2Rot", "q", "vf");
-addFunction(10.f, 0.f, dummy_func, "llRot2Axis", "v", "q");
-addFunction(10.f, 0.f, dummy_func, "llRot2Angle", "f", "q");
-addFunction(10.f, 0.f, dummy_func, "llAcos", "f", "f");
-addFunction(10.f, 0.f, dummy_func, "llAsin", "f", "f");
-addFunction(10.f, 0.f, dummy_func, "llAngleBetween", "f", "qq");
+
 addFunction(10.f, 0.f, dummy_func, "llGetInventoryKey", "k", "s");
 addFunction(10.f, 0.f, dummy_func, "llAllowInventoryDrop", NULL, "i");
 addFunction(10.f, 0.f, dummy_func, "llGetSunDirection", "v", NULL);
 addFunction(10.f, 0.f, dummy_func, "llGetTextureOffset", "v", "i");
 addFunction(10.f, 0.f, dummy_func, "llGetTextureScale", "v", "i");
 addFunction(10.f, 0.f, dummy_func, "llGetTextureRot", "f", "i");
-addFunction(10.f, 0.f, dummy_func, "llSubStringIndex", "i", "ss");
 addFunction(10.f, 0.f, dummy_func, "llGetOwnerKey", "k", "k");
 addFunction(10.f, 0.f, dummy_func, "llGetCenterOfMass", "v", NULL);
-addFunction(10.f, 0.f, dummy_func, "llListSort", "l", "lii");
-addFunction(10.f, 0.f, dummy_func, "llGetListLength", "i", "l");
-addFunction(10.f, 0.f, dummy_func, "llList2Integer", "i", "li");
-addFunction(10.f, 0.f, dummy_func, "llList2Float", "f", "li");
-addFunction(10.f, 0.f, dummy_func, "llList2String", "s", "li");
-addFunction(10.f, 0.f, dummy_func, "llList2Key", "k", "li");
-addFunction(10.f, 0.f, dummy_func, "llList2Vector", "v", "li");
-addFunction(10.f, 0.f, dummy_func, "llList2Rot", "q", "li");
-addFunction(10.f, 0.f, dummy_func, "llList2List", "l", "lii");
-addFunction(10.f, 0.f, dummy_func, "llDeleteSubList", "l", "lii");
-addFunction(10.f, 0.f, dummy_func, "llGetListEntryType", "i", "li");
-addFunction(10.f, 0.f, dummy_func, "llList2CSV", "s", "l");
-addFunction(10.f, 0.f, dummy_func, "llCSV2List", "l", "s");
-addFunction(10.f, 0.f, dummy_func, "llListRandomize", "l", "li");
-addFunction(10.f, 0.f, dummy_func, "llList2ListStrided", "l", "liii");
 addFunction(10.f, 0.f, dummy_func, "llGetRegionCorner", "v", NULL);
-addFunction(10.f, 0.f, dummy_func, "llListInsertList", "l", "lli");
-addFunction(10.f, 0.f, dummy_func, "llListFindList", "i", "ll");
+
 addFunction(10.f, 0.f, dummy_func, "llGetObjectName", "s", NULL);
 addFunction(10.f, 0.f, dummy_func, "llSetObjectName", NULL, "s");
 addFunction(10.f, 0.f, dummy_func, "llGetDate", "s", NULL);
@@ -216,7 +264,7 @@ addFunction(10.f, 0.f, dummy_func, "llKey2Name", "s", "k");
 addFunction(10.f, 0.f, dummy_func, "llSetTextureAnim", NULL, "iiiifff");
 addFunction(10.f, 0.f, dummy_func, "llTriggerSoundLimited", NULL, "sfvv");
 addFunction(10.f, 0.f, dummy_func, "llEjectFromLand", NULL, "k");
-addFunction(10.f, 0.f, dummy_func, "llParseString2List", "l", "sll");
+
 addFunction(10.f, 0.f, dummy_func, "llOverMyLand", "i", "k");
 addFunction(10.f, 0.f, dummy_func, "llGetLandOwnerAt", "k", "v");
 addFunction(10.f, 0.1f, dummy_func, "llGetNotecardLine", "k", "si");
@@ -251,7 +299,6 @@ addFunction(10.f, 0.f, dummy_func, "llSetSitText", NULL, "s");
 addFunction(10.f, 0.f, dummy_func, "llSetCameraEyeOffset", NULL, "v");
 addFunction(10.f, 0.f, dummy_func, "llSetCameraAtOffset", NULL, "v");
 
-addFunction(10.f, 0.f, dummy_func, "llDumpList2String", "s", "ls");
 addFunction(10.f, 0.f, dummy_func, "llScriptDanger", "i", "v");
 addFunction(10.f, 1.f, dummy_func, "llDialog", NULL, "ksli");
 addFunction(10.f, 0.f, dummy_func, "llVolumeDetect", NULL, "i");
@@ -267,14 +314,8 @@ addFunction(10.f, 3.f, dummy_func, "llSendRemoteData", "k", "ksis");
 addFunction(10.f, 3.f, dummy_func, "llRemoteDataReply", NULL, "kksi");
 addFunction(10.f, 1.f, dummy_func, "llCloseRemoteDataChannel", NULL, "k");
 
-addFunction(10.f, 0.f, dummy_func, "llMD5String", "s", "si");
 addFunction(10.f, 0.2f, dummy_func, "llSetPrimitiveParams", NULL, "l");
-addFunction(10.f, 0.f, dummy_func, "llStringToBase64", "s", "s");
-addFunction(10.f, 0.f, dummy_func, "llBase64ToString", "s", "s");
-addFunction(10.f, 0.3f, dummy_func, "llXorBase64Strings", "s", "ss");
 addFunction(10.f, 0.f, dummy_func, "llRemoteDataSetRegion", NULL, NULL);
-addFunction(10.f, 0.f, dummy_func, "llLog10", "f", "f");
-addFunction(10.f, 0.f, dummy_func, "llLog", "f", "f");
 addFunction(10.f, 0.f, dummy_func, "llGetAnimationList", "l", "k");
 addFunction(10.f, 2.f, dummy_func, "llSetParcelMusicURL", NULL, "s");
 
@@ -292,14 +333,12 @@ addFunction(10.f, 0.1f, dummy_func, "llGetNumberOfNotecardLines", "k", "s");
 addFunction(10.f, 0.f, dummy_func, "llGetBoundingBox", "l", "k");
 addFunction(10.f, 0.f, dummy_func, "llGetGeometricCenter", "v", NULL);
 addFunction(10.f, 0.2f, dummy_func, "llGetPrimitiveParams", "l", "l");
-addFunction(10.f, 0.0f, dummy_func, "llIntegerToBase64", "s", "i");
-addFunction(10.f, 0.0f, dummy_func, "llBase64ToInteger", "i", "s");
 addFunction(10.f, 0.f, dummy_func, "llGetGMTclock", "f", "");
 addFunction(10.f, 10.f, dummy_func, "llGetSimulatorHostname", "s", "");
 
+
 addFunction(10.f, 0.2f, dummy_func, "llSetLocalRot", NULL, "q");
 
-addFunction(10.f, 0.f, dummy_func, "llParseStringKeepNulls", "l", "sll");
 addFunction(200.f, 0.1f, dummy_func, "llRezAtRoot", NULL, "svvqi");
 
 addFunction(10.f, 0.f, dummy_func, "llGetObjectPermMask", "i", "i", FALSE);
@@ -317,8 +356,6 @@ addFunction(10.f, 10.f, dummy_func, "llLoadURL", NULL, "kss");
 
 addFunction(10.f, 2.f, dummy_func, "llParcelMediaCommandList", NULL, "l");
 addFunction(10.f, 2.f, dummy_func, "llParcelMediaQuery", "l", "l");
-
-addFunction(10.f, 1.f, dummy_func, "llModPow", "i", "iii");
 
 addFunction(10.f, 0.f, dummy_func, "llGetInventoryType", "i", "s");
 addFunction(10.f, 0.f, dummy_func, "llSetPayPrice", NULL, "il");
@@ -342,7 +379,6 @@ addFunction(10.f, 0.f, dummy_func, "llListStatistics", "f", "il");
 addFunction(10.f, 0.f, dummy_func, "llGetUnixTime", "i", NULL);
 addFunction(10.f, 0.f, dummy_func, "llGetParcelFlags", "i", "v");
 addFunction(10.f, 0.f, dummy_func, "llGetRegionFlags", "i", NULL);
-addFunction(10.f, 0.f, dummy_func, "llXorBase64StringsCorrect", "s", "ss");
 
 addFunction(10.f, 0.f, dummy_func, "llHTTPRequest", "k", "sls");
 
@@ -375,7 +411,6 @@ addFunction(10.f, 0.f, dummy_func, "llDetectedTouchNormal", "v", "i");
 addFunction(10.f, 0.f, dummy_func, "llDetectedTouchBinormal", "v", "i");
 addFunction(10.f, 0.f, dummy_func, "llDetectedTouchST", "v", "i");
 
-addFunction(10.f, 0.f, dummy_func, "llSHA1String", "s", "s");
 
 addFunction(10.f, 0.f, dummy_func, "llGetFreeURLs", "i", NULL);
 addFunction(10.f, 0.f, dummy_func, "llRequestURL", "k", NULL);

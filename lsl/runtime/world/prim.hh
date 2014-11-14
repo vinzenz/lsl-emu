@@ -90,19 +90,19 @@ struct PrimShape {
 };
 
 struct Prim {
-    String      key;
+    Key         key;
 //    Inventory   inventory;
     Quaternion  rotation;
     Vector      position;
     Vector      velocity;
-    String      root;
+    Key         root;
 
     String      name;
     String      description;
 
-    String      owner;
-    String      group;
-    String      creator;
+    Key         owner;
+    Key         group;
+    Key         creator;
 
     Integer     equivalence;
     Integer     flags; // PHYSICS, PHANTOM, TEMP_ON_REZ
@@ -118,12 +118,28 @@ struct Prim {
     Vector      omega_axis;
     Float       omega_spin_rate;
     Float       omega_gain;
-
-    bool operator < (Prim const & p) const {
-        return key < p.key;
-    }
+    PrimShape   shape;
 };
 typedef boost::reference_wrapper<Prim> PrimRef;
+
+
+
+inline bool operator < (Prim const & lhs, Prim const & rhs) {
+    return lhs.key < rhs.key;
+}
+
+inline bool operator < (PrimRef const & lhs, PrimRef const & rhs) {
+    return lhs.get() < rhs.get();
+}
+
+inline bool operator == (Prim const & lhs, Prim const & rhs) {
+    return lhs.key == rhs.key;
+}
+
+inline bool operator == (PrimRef const & lhs, PrimRef const & rhs) {
+    return lhs.get() == rhs.get();
+}
+
 
 }
 }

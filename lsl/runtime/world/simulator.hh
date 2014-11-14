@@ -38,6 +38,8 @@ typedef std::unordered_map<
 struct Simulator {
     prim_container      prims;
     objects_container   objects;
+    String              region_name;
+    Vector              region_pos;
 };
 
 }}

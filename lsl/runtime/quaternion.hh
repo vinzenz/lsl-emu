@@ -10,6 +10,10 @@ namespace runtime {
         double x, y, z, s;
     };
 
+    inline Quaternion identity(Quaternion) {
+        return {0., 0., 0., 1.};
+    }
+
     inline Quaternion add(Quaternion l, Quaternion r) {
         return Quaternion{
             l.x + r.x,
