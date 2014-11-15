@@ -72,9 +72,16 @@ String llXorBase64StringsCorrect(ScriptRef, String, String);
 
 
 // List
-//addFunction(10.f, 0.f, dummy_func, "llListSort", "l", "lii");
-//addFunction(10.f, 0.f, dummy_func, "llGetListLength", "i", "l");
-//addFunction(10.f, 0.f, dummy_func, "llList2Integer", "i", "li");
+List     llListSort(ScriptRef, List, Integer, Integer);
+Integer  llGetListLength(ScriptRef, List);
+Integer  llList2Integer(ScriptRef, List, Integer);
+Float    llList2Float(ScriptRef, List, Integer);
+String   llList2String(ScriptRef, List, Integer);
+Key      llList2Key(ScriptRef, List, Integer);
+Vector   llList2Vector(ScriptRef, List, Integer);
+Rotation llList2Rot(ScriptRef, List, Integer);
+
+
 //addFunction(10.f, 0.f, dummy_func, "llList2Float", "f", "li");
 //addFunction(10.f, 0.f, dummy_func, "llList2String", "s", "li");
 //addFunction(10.f, 0.f, dummy_func, "llList2Key", "k", "li");

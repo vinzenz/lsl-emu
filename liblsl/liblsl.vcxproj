@@ -23,8 +23,12 @@
     <ClCompile Include="..\lsl\ast\printer.cc" />
     <ClCompile Include="..\lsl\filebuf.cc" />
     <ClCompile Include="..\lsl\lexer\lexer.cc" />
+    <ClCompile Include="..\lsl\md5.cc" />
     <ClCompile Include="..\lsl\parser\make_string.cc" />
     <ClCompile Include="..\lsl\parser\parser.cc" />
+    <ClCompile Include="..\lsl\runtime\library\functions.cc" />
+    <ClCompile Include="..\lsl\runtime\library\math.cc" />
+    <ClCompile Include="..\lsl\runtime\library\string.cc" />
     <ClCompile Include="..\lsl\runtime\world\script\eval.cc" />
     <ClCompile Include="..\lsl\runtime\world\script\state.cc" />
     <ClCompile Include="..\lsl\runtime\world\script\value.cc" />
@@ -40,6 +44,7 @@
     <ClInclude Include="..\lsl\lexer\op.hh" />
     <ClInclude Include="..\lsl\lexer\tokendef.hh" />
     <ClInclude Include="..\lsl\lexer\tokens.hh" />
+    <ClInclude Include="..\lsl\md5.hh" />
     <ClInclude Include="..\lsl\parser\apply.hh" />
     <ClInclude Include="..\lsl\parser\error.hh" />
     <ClInclude Include="..\lsl\parser\parser.hh" />
@@ -64,6 +69,7 @@
     <ClInclude Include="..\lsl\runtime\world\script\value_convert.hh" />
     <ClInclude Include="..\lsl\runtime\world\simulator.hh" />
     <ClInclude Include="..\lsl\types.hh" />
+    <ClInclude Include="..\lsl\utils.hh" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{6377C34B-3296-4852-B870-E59DDE5B3B4B}</ProjectGuid>

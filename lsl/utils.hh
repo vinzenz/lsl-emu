@@ -1,8 +1,12 @@
 #ifndef GUARD_LSL_UTILS_HH_INCLUDED
 #define GUARD_LSL_UTILS_HH_INCLUDED
 
+#include <cstdint>
+#include <array>
 #include <string.h>
 #include <lsl/runtime/types.hh>
+#include <lsl/md5.hh>
+#include <iterator>
 
 namespace lsl {
     template< typename... Args >
@@ -15,6 +19,20 @@ namespace lsl {
 #endif
         return buffer;
     }
+
+    template< typename ForwardIterT >
+    std::array<std::uint8_t, 16> to_md5(ForwardIterT start, ForwardIterT end) {
+        std::array<std::uint8_t, 16> result;
+        MD5_CTX ctx = {};
+        MD5Init(&ctx);
+        for(;start != end; ++start) {
+            auto element = static_cast<std::iterator_traits<ForwardIterT>::value_type>(*start);
+            MD5Update(&ctx, reinterpret_cast<uint8_t*>(&element), static_cast<unsigned>(sizeof(element)));
+        }
+        MD5Final(result._Elems, &ctx);
+        return result;
+    }
+
 }
 
 #endif //GUARD_LSL_UTILS_HH_INCLUDED

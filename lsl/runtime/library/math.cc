@@ -14,9 +14,9 @@ Float llSqrt(ScriptRef, Float a)           { return sqrt(a); }
 Float llPow(ScriptRef, Float a, Float b)   { return pow(a, b); }
 Integer llAbs(ScriptRef, Integer a)        { return abs(a); }
 Float llFabs(ScriptRef, Float a)           { return fabs(a); }
-Integer llFloor(ScriptRef, Float a)        { return floor(a); }
-Integer llCeil(ScriptRef, Float a)         { return ceil(a); }
-Integer llRound(ScriptRef, Float a)        { return round(a); }
+Integer llFloor(ScriptRef, Float a)        { return static_cast<Integer>(floor(a)); }
+Integer llCeil(ScriptRef, Float a)         { return static_cast<Integer>(ceil(a)); }
+Integer llRound(ScriptRef, Float a)        { return static_cast<Integer>(round(a)); }
 Float llAcos(ScriptRef, Float a)           { return acos(a); }
 Float llAsin(ScriptRef, Float a)           { return asin(a); }
 
@@ -25,8 +25,8 @@ Vector llVecNorm(ScriptRef, Vector a)      { return norm(a); }
 Float llVecDist(ScriptRef, Vector a, Vector b) { return dist(a, b); }
 
 Rotation llAxes2Rot(Vector fwd, Vector left, Vector up) {
-    float s;
-    float tr = fwd.x + left.y + up.z + 1.0;
+    Float s = 0.;
+    Float tr = fwd.x + left.y + up.z + 1.0;
     if (tr >= 1.0) {
         s = 0.5 / sqrt(tr);
         return {
@@ -37,7 +37,7 @@ Rotation llAxes2Rot(Vector fwd, Vector left, Vector up) {
         };
     }
     else {
-        float max = (left.y > up.z) ? left.y : up.z;
+        Float max = (left.y > up.z) ? left.y : up.z;
         if (max < fwd.x) {
             s = sqrt(fwd.x - (left.y + up.z) + 1.0);
             Float x = s * 0.5;
@@ -62,7 +62,7 @@ Rotation llAxes2Rot(Vector fwd, Vector left, Vector up) {
         }
         else {
             s = sqrt(up.z - (fwd.x + left.y) + 1.0);
-            float z = s * 0.5f;
+            Float z = s * 0.5f;
             s = 0.5f / s;
             return {
                 ((up.x + fwd.z) * s),

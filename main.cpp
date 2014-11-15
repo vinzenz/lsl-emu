@@ -4,6 +4,7 @@
 #include <lsl/runtime/types.hh>
 #include <lsl/runtime/world/script.hh>
 #include <lsl/runtime/world/simulator.hh>
+#include <lsl/runtime/library/functions.hh>
 int main(int argc, char const **argv)
 {
     if(argc < 2) {
@@ -58,8 +59,8 @@ int main(int argc, char const **argv)
     lsl::ast::PrinterState ps{0};
     lsl::ast::print(ps, scr);
     */
-#if 1
     using namespace lsl::runtime::script;
+#if 0
     using lsl::runtime::ValueType;
     auto llSay = CompiledScriptFunction{
         ValueType::Void,
@@ -76,7 +77,7 @@ int main(int argc, char const **argv)
     script->dispatch_event("state_entry", {});
     script->dispatch_event("state_exit", {});
 #endif
-
+    auto script = Script("foo");
     lsl::runtime::Simulator simulator;
 
 
