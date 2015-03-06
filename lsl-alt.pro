@@ -4,6 +4,7 @@ CONFIG -= app_bundle
 CONFIG -= qt
 
 QMAKE_CXXFLAGS=-std=c++11 -I. -O0 -ggdb
+LIBS=-lboost_regex
 
 SOURCES += main.cpp \
     lsl/lexer/lexer.cc \
@@ -25,7 +26,10 @@ SOURCES += main.cpp \
     lsl/runtime/world/script/state.cc \
     lsl/runtime/library/functions.cc \
     lsl/runtime/library/math.cc \
-    lsl/runtime/library/string.cc
+    lsl/runtime/library/string.cc \
+    lsl/runtime/world/script/value_convert.cc \
+    lsl/md5.cc \
+    lsl/runtime/library/list.cc
 
 include(deployment.pri)
 qtcAddDeployment()

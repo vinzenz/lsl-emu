@@ -5,6 +5,7 @@
 #include <lsl/runtime/world/script/value.hh>
 #include <lsl/runtime/world/script/state.hh>
 #include <lsl/runtime/world/script/function.hh>
+#include <deque>
 
 namespace lsl {
 namespace runtime {
@@ -27,6 +28,8 @@ struct Script {
     String                                          current_state;
     String                                          prim_key;
     Library                                         library;
+    typedef std::tuple<std::string, ScriptValue::list_type> event_item_type;
+    std::deque<event_item_type>                     pending_events;
 
     Script(String const & prim_key)
     : globals()

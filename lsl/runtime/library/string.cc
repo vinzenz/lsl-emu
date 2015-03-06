@@ -13,6 +13,9 @@ namespace runtime {
 namespace lib {
 
 bool CorrectIndex(size_t max, Integer & s, Integer & e) {
+    if(max == 0) {
+        return false;
+    }
     Integer imax = static_cast<std::make_signed<size_t>::type>(max);
     if(s < 0) {
         s = imax + s;
@@ -95,7 +98,7 @@ String llIntegerToBase64(ScriptRef, Integer a) {
 Integer llBase64ToInteger(ScriptRef, String a) {
     size_t remove_padding = 0;
     while(a.size() < remove_padding && *(a.cbegin() + remove_padding) == '=')
-        ++remove_padding;    
+        ++remove_padding;
     typedef boost::archive::iterators::binary_from_base64 <
         boost::archive::iterators::transform_width <
         char const *, 8, 6

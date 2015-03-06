@@ -116,6 +116,7 @@ bool valid_key(String const & key) {
         case 23:
         if(x != '-')
             return false;
+        break;
         default:
         if((x >= 'a' && x <= 'f') || (x >= 'A' && x <= 'F') || (x >= '0' && x <= '9')) {
             break;
@@ -184,7 +185,8 @@ CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::Call const & 
             for(auto const & arg : arguments) {
                 call_args.emplace_back(std::move(arg.compiled(scope).get()));
             }
-            return fun->call(ScriptFunctionCall{scope.script, call_args});
+            auto res = fun->call(ScriptFunctionCall{scope.script, call_args});
+            return res;
         }
     };
 }
@@ -583,6 +585,13 @@ CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::Return const 
     };
 }
 
+ScriptValue deref(ScriptValue val) {
+    if(!val.reference) {
+        return val;
+    }
+    return val.get_ref().get();
+}
+
 CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::List const & v) {
     std::vector<CompiledExpression> elements;
     elements.reserve(v.elements.size());
@@ -597,6 +606,7 @@ CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::List const & 
             target.reserve(elements.size());
             for(size_t i = 0; i < elements.size(); ++i) {
                 target.emplace_back(std::move(elements[i].compiled(scope).get()));
+                target.back() = deref(target.back());
             }
 
             ScriptValue result;
@@ -1137,6 +1147,93 @@ CompiledExpression sub(CompiledExpression const & left, CompiledExpression const
     };
 }
 
+CompiledExpression add(CompiledExpression const & left, CompiledExpression const & right, Ast const & v) {
+    bool flt = false;
+    bool vec = false;
+    bool rot = false;
+    switch(left.result_type) {
+    case ValueType::Float:
+        flt = true;
+        break;
+    case ValueType::Rotation:
+        rot = true;
+        break;
+    case ValueType::Vector:
+        vec = true;
+        break;
+    case ValueType::Integer:
+        break;
+    default:
+         throw ScriptError("Type mismatch", v.line, v.column);
+    }
+
+    switch(right.result_type) {
+    case ValueType::Vector:
+    case ValueType::Rotation:
+        if(right.result_type != left.result_type) {
+            throw ScriptError("Type mismatch", v.line, v.column);
+        }
+        break;
+    case ValueType::Float:
+        flt = true;
+    case ValueType::Integer:
+        break;
+    default:
+         throw ScriptError("Type mismatch", v.line, v.column);
+    }
+
+    if(vec) {
+        return {
+            ValueType::Vector,
+            false,
+            [left, right](Scope & scope) -> CallResult {
+                return ScriptValue {
+                    ValueType::Vector,
+                    left.compiled(scope).get().get_vector() + right.compiled(scope).get().get_vector(),
+                    false
+                };
+            }
+        };
+    }
+    if(rot) {
+        return {
+            ValueType::Rotation,
+            false,
+            [left, right](Scope & scope) -> CallResult {
+                return ScriptValue {
+                    ValueType::Rotation,
+                    left.compiled(scope).get().get_rotation() + right.compiled(scope).get().get_rotation(),
+                    false
+                };
+            }
+        };
+    }
+    if(flt) {
+        return {
+            ValueType::Float,
+            false,
+            [left, right](Scope & scope) -> CallResult {
+                return ScriptValue {
+                    ValueType::Float,
+                    left.compiled(scope).get().as_float() + right.compiled(scope).get().as_float(),
+                    false
+                };
+            }
+        };
+    }
+    return {
+        ValueType::Integer,
+        false,
+        [left, right](Scope & scope) -> CallResult {
+            return ScriptValue {
+                ValueType::Integer,
+                left.compiled(scope).get().get_integer() + right.compiled(scope).get().get_integer(),
+                false
+            };
+        }
+    };
+}
+
 
 CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::BinOp const & v) {
     auto left = eval_expr(script, scope, v.left);
@@ -1156,6 +1253,9 @@ CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::BinOp const &
             else {
                 impl = combine_list(left, right);
             }
+            break;
+        } else {
+            impl = add(left, right, v);
             break;
         }
     // require vector, rotation, float, or integer
@@ -1658,6 +1758,7 @@ eval_function(
         ScriptValue value;
         init_with_type(value, ast.returnType);
         return_type = value.type;
+        scope.return_type = ast.returnType;
     }
 
     auto body = eval_expr(script, scope, ast.body);

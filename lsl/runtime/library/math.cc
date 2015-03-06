@@ -24,7 +24,7 @@ Float llVecMag(ScriptRef, Vector a)        { return mag(a); }
 Vector llVecNorm(ScriptRef, Vector a)      { return norm(a); }
 Float llVecDist(ScriptRef, Vector a, Vector b) { return dist(a, b); }
 
-Rotation llAxes2Rot(Vector fwd, Vector left, Vector up) {
+Rotation llAxes2Rot(ScriptRef, Vector fwd, Vector left, Vector up) {
     Float s = 0.;
     Float tr = fwd.x + left.y + up.z + 1.0;
     if (tr >= 1.0) {

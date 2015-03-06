@@ -17,7 +17,15 @@ typedef String      Key;
 typedef Quaternion  Rotation;
 
 
-inline String to_string(float val) {
+
+inline String to_string(Integer val) {
+    std::ostringstream ostr;
+    ostr << val;
+    return ostr.str();
+
+}
+
+inline String to_string(Float val) {
     std::ostringstream ostr;
     ostr << std::setiosflags(std::ios::fixed) << std::setprecision(6) << val;
     return ostr.str();
@@ -50,15 +58,15 @@ inline String to_string(Quaternion val) {
     return ostr.str();
 }
 
-enum class ValueType {
-    Void,
-    String,
-    Key,
-    List,
-    Float,
-    Integer,
-    Vector,
-    Rotation
+enum class ValueType : lsl::runtime::Integer {
+    Void        = 0,
+    Integer     = 1,
+    Float       = 2,
+    String      = 3,
+    Key         = 4,
+    Vector      = 5,
+    Rotation    = 6,
+    List        = 7
 };
 
 struct ScriptValue {
@@ -103,6 +111,7 @@ struct ScriptValue {
     boost::reference_wrapper<ScriptValue> & get_ref();
 };
 bool operator==(ScriptValue const & left, ScriptValue const & right);
+// bool operator<(ScriptValue const & left, ScriptValue const & right);
 
 typedef ScriptValue::list_type List;
 

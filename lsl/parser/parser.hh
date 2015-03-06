@@ -24,7 +24,7 @@ namespace lsl {
 struct ParserOptions {
     ParserOptions()
     : printerrors(true)
-    , printdbgerrors(false)
+    , printdbgerrors(true)
     , error_handler()
     {}
 

@@ -13,7 +13,7 @@ namespace lsl {
     std::string format(char const * fmt, Args... args) {
         char buffer[1024] = {0};
 #if defined(WIN32)
-        sprintf_s(buffer, 1024, fmt, args...);        
+        sprintf_s(buffer, 1024, fmt, args...);
 #else
         sprintf(buffer, fmt, args...);
 #endif
@@ -26,10 +26,14 @@ namespace lsl {
         MD5_CTX ctx = {};
         MD5Init(&ctx);
         for(;start != end; ++start) {
-            auto element = static_cast<std::iterator_traits<ForwardIterT>::value_type>(*start);
+            auto element = static_cast<typename std::iterator_traits<ForwardIterT>::value_type>(*start);
             MD5Update(&ctx, reinterpret_cast<uint8_t*>(&element), static_cast<unsigned>(sizeof(element)));
         }
+#if defined(_MSC_VER)
         MD5Final(result._Elems, &ctx);
+#else
+        MD5Final(result._M_elems, &ctx);
+#endif
         return result;
     }
 

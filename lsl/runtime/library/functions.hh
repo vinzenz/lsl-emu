@@ -24,7 +24,7 @@ Integer llCeil(ScriptRef, Float);
 Integer llRound(ScriptRef, Float);
 Float llAcos(ScriptRef, Float);
 Float llAsin(ScriptRef, Float);
-Rotation llAxes2Rot(Vector a, Vector b, Vector c);
+Rotation llAxes2Rot(ScriptRef, Vector a, Vector b, Vector c);
 
 Float llVecMag(ScriptRef, Vector);
 Vector llVecNorm(ScriptRef, Vector);
@@ -69,7 +69,7 @@ String llSHA1String(ScriptRef, String, Integer);
 
 String llXorBase64Strings(ScriptRef, String, String);
 String llXorBase64StringsCorrect(ScriptRef, String, String);
-
+String llXorBase64(ScriptRef s, String a, String b);
 
 // List
 List     llListSort(ScriptRef, List, Integer, Integer);
@@ -80,25 +80,18 @@ String   llList2String(ScriptRef, List, Integer);
 Key      llList2Key(ScriptRef, List, Integer);
 Vector   llList2Vector(ScriptRef, List, Integer);
 Rotation llList2Rot(ScriptRef, List, Integer);
-
-
-//addFunction(10.f, 0.f, dummy_func, "llList2Float", "f", "li");
-//addFunction(10.f, 0.f, dummy_func, "llList2String", "s", "li");
-//addFunction(10.f, 0.f, dummy_func, "llList2Key", "k", "li");
-//addFunction(10.f, 0.f, dummy_func, "llList2Vector", "v", "li");
-//addFunction(10.f, 0.f, dummy_func, "llList2Rot", "q", "li");
-//addFunction(10.f, 0.f, dummy_func, "llList2List", "l", "lii");
-//addFunction(10.f, 0.f, dummy_func, "llDeleteSubList", "l", "lii");
-//addFunction(10.f, 0.f, dummy_func, "llGetListEntryType", "i", "li");
-//addFunction(10.f, 0.f, dummy_func, "llList2CSV", "s", "l");
-//addFunction(10.f, 0.f, dummy_func, "llCSV2List", "l", "s");
-//addFunction(10.f, 0.f, dummy_func, "llListRandomize", "l", "li");
-//addFunction(10.f, 0.f, dummy_func, "llList2ListStrided", "l", "liii");
-//addFunction(10.f, 0.f, dummy_func, "llListInsertList", "l", "lli");
-//addFunction(10.f, 0.f, dummy_func, "llListFindList", "i", "ll");
-//addFunction(10.f, 0.f, dummy_func, "llParseString2List", "l", "sll");
-//addFunction(10.f, 0.f, dummy_func, "llDumpList2String", "s", "ls");
-//addFunction(10.f, 0.f, dummy_func, "llParseStringKeepNulls", "l", "sll");
+List     llList2List(ScriptRef, List, Integer, Integer);
+List     llDeleteSubList(ScriptRef, List, Integer, Integer);
+Integer  llGetListEntryType(ScriptRef, List, Integer);
+String   llList2CSV(ScriptRef, List);
+List     llCSV2List(ScriptRef, String);
+List     llListRandomize(ScriptRef, List l, Integer stride);
+List     llList2ListStrided(ScriptRef, List, Integer, Integer, Integer);
+List     llListInsertList(ScriptRef, List, List, Integer);
+Integer  llFindList(ScriptRef, List, List);
+List     llParseString2List(ScriptRef, String, List, List);
+List     llParseStringKeepNulls(ScriptRef, String, List, List);
+String   llDumpList2String(ScriptRef, List, String);
 
 
 

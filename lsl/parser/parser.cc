@@ -188,6 +188,41 @@ bool list_init(State & s, AstPtr & target, parser_fun_t fun = expression){
     return guard.commit();
 }
 
+bool check_for_constants(std::shared_ptr<Variable> & ast, AstPtr & target) {
+    if(ast->name == "NULL_KEY") {
+        auto k = create<Key>(target);
+        clone_location(ast, k);
+        k->value = "00000000-0000-0000-0000-000000000000";
+        return true;
+    }
+    if(ast->name == "ZERO_VECTOR") {
+        auto v = create<Vector>(target);
+        clone_location(ast, v);
+        clone_location(ast, create<Float>(v->x));
+        clone_location(ast, create<Float>(v->y));
+        clone_location(ast, create<Float>(v->z));
+        return true;
+    }
+    if(ast->name == "ZERO_ROTATION") {
+        auto q = create<Quaternion>(target);
+        clone_location(ast, q);
+        clone_location(ast, create<Float>(q->x));
+        clone_location(ast, create<Float>(q->y));
+        clone_location(ast, create<Float>(q->z));
+        auto s = create<Float>(q->z);
+        clone_location(ast, s);
+        s->value = 1.0;
+        return true;
+    }
+    if(ast->name == "HTTP_METHOD") {
+        auto i = create<Integer>(target);
+        clone_location(ast, i);
+        i->value = 0;
+        return true;
+    }
+    return false;
+}
+
 bool lvalue(State &s, AstPtr &target) {
     StateGuard guard(s, target);
     auto ast = create<Variable>(target);
@@ -196,8 +231,10 @@ bool lvalue(State &s, AstPtr &target) {
     if(!consume_value(s, Token::Identifier, ast->name)) {
         return false;
     }
-    if(expect(s, TokenKind::Dot) && !consume_value(s, Token::Identifier, ast->member)) {
-        return false;
+    if(!check_for_constants(ast, target)) {
+        if(expect(s, TokenKind::Dot) && !consume_value(s, Token::Identifier, ast->member)) {
+            return false;
+        }
     }
     return guard.commit();
 }
@@ -219,7 +256,7 @@ bool integer_constant(State & s, AstPtr & target) {
 
     if(is(s, TokenKind::Number)) {
         try {
-            boost::multiprecision::checked_int128_t integ(value);
+            boost::multiprecision::cpp_int integ(value);
             ast->value = static_cast<decltype(ast->value)>(integ);
         }
         catch(std::runtime_error const &) {
@@ -323,6 +360,8 @@ bool identifier(State & s, AstPtr & target) {
     if(!consume_value(s, Token::Identifier, ast->name)) {
         return false;
     }
+
+    check_for_constants(ast, target);
 
     return guard.commit();
 }

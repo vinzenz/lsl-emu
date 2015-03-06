@@ -9,7 +9,7 @@ namespace lib {
 
 Float llFrand(ScriptRef, Float upper)
 {
-    std::default_random_engine e;
+    std::random_device e;
     std::uniform_real_distribution<Float> unif(Float(0.),upper);
     return unif(e);
 }
