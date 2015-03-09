@@ -10,6 +10,13 @@ namespace script {
 
 // TODO: Improve variable usage = Currently only one local stack is available
 
+ScriptValue deref(ScriptValue val) {
+    if(!val.reference) {
+        return val;
+    }
+    return deref(val.get_ref().get());
+}
+
 struct Scope;
 typedef std::function<CallResult(Scope &)> CompiledFunction;
 struct CompiledExpression {
@@ -179,7 +186,7 @@ CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::Call const & 
     return {
         fun->compiled.result_type,
         false,
-        [fun, arguments](Scope & scope) -> CallResult {
+        [fun, arguments, v](Scope & scope) -> CallResult {
             auto call_args = ScriptValue::list_type();
             call_args.reserve(arguments.size());
             for(auto const & arg : arguments) {
@@ -389,7 +396,7 @@ CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::VarDecl const
     }
 
     ScriptValue value;
-    value.reference = true;
+    value.reference = false;
     init_with_type(value, v.type_name);
     scope.locals.local(name) = value;
 
@@ -426,7 +433,11 @@ CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::VarDecl const
                     scope.locals.local(name).value = rvalue.as_key();
                 }
                 else {
-                    scope.locals.local(name).value = rvalue.value;
+                    if(rvalue.reference) {
+                        scope.locals.local(name)= rvalue.get_ref().get();
+                    } else {
+                        scope.locals.local(name).value = rvalue.value;
+                    }
                 }
                 return CallResult();
             }
@@ -570,7 +581,7 @@ CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::Return const 
             ValueType::Void,
             false,
             [res](Scope & scope) -> CallResult {
-                throw FunctionReturnException(res.compiled(scope));
+                throw FunctionReturnException(res.compiled(scope).get());
                 return CallResult();
             }
         };
@@ -583,13 +594,6 @@ CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::Return const 
             return CallResult();
         }
     };
-}
-
-ScriptValue deref(ScriptValue val) {
-    if(!val.reference) {
-        return val;
-    }
-    return val.get_ref().get();
 }
 
 CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::List const & v) {
@@ -605,8 +609,7 @@ CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::List const & 
             auto target = ScriptValue::list_type();
             target.reserve(elements.size());
             for(size_t i = 0; i < elements.size(); ++i) {
-                target.emplace_back(std::move(elements[i].compiled(scope).get()));
-                target.back() = deref(target.back());
+                target.push_back(deref(elements[i].compiled(scope).get()));
             }
 
             ScriptValue result;
@@ -1361,7 +1364,7 @@ CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::Variable cons
                     value.type = ValueType::Float;
                     value.reference = true;
                     if(local) {
-                        value.value =boost::ref(scope.locals[name].get_vector().*member);
+                        value.value = boost::ref(scope.locals[name].get_vector().*member);
                     }
                     else {
                         value.value = boost::ref(scope.script.get().globals[name].get_vector().*member);
@@ -1551,6 +1554,7 @@ CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::BoolOp const 
         false,
         [op, and_compare, or_compare](Scope & scope) -> CallResult {
             ScriptValue result;
+            result.reference = false;
             result.type = ValueType::Integer;
             result.value = op == AstBoolOpType::Or ? or_compare(scope) : and_compare(scope);
             return result;
@@ -1564,6 +1568,7 @@ CompiledExpression eval_expr(ScriptRef, Scope &, lsl::Integer const & v) {
         false,
         [v](Scope &) -> CallResult {
             ScriptValue value;
+            value.reference = false;
             value.type = ValueType::Integer;
             value.value = v.value;
             return value;
@@ -1577,6 +1582,7 @@ CompiledExpression eval_expr(ScriptRef, Scope &, lsl::StringLit const & v) {
         false,
         [v](Scope &) -> CallResult {
             ScriptValue value;
+            value.reference = false;
             value.type = ValueType::String;
             value.value = v.value;
             return value;
@@ -1590,6 +1596,7 @@ CompiledExpression eval_expr(ScriptRef, Scope &, lsl::Key const & v) {
         false,
         [v](Scope &) -> CallResult {
             ScriptValue value;
+            value.reference = false;
             value.type = ValueType::Key;
             value.value = v.value;
             return value;
@@ -1620,6 +1627,7 @@ CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::Quaternion co
         false,
         [data](Scope & scope) -> CallResult {
             ScriptValue value;
+            value.reference = false;
             value.type = ValueType::Rotation;
             value.value = lsl::runtime::Quaternion{
                     std::get<0>(data).compiled(scope).get().as_float(),
@@ -1648,6 +1656,7 @@ CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::Vector const 
         [data](Scope & scope) -> CallResult {
             ScriptValue value;
             value.type = ValueType::Vector;
+            value.reference = false;
             value.value = lsl::runtime::Vector{
                     std::get<0>(data).compiled(scope).get().as_float(),
                     std::get<1>(data).compiled(scope).get().as_float(),
@@ -1660,10 +1669,11 @@ CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::Vector const 
 
 CompiledExpression eval_expr(ScriptRef, Scope &, lsl::Float const & v) {
     return {
-        ValueType::Vector,
+        ValueType::Float,
         false,
         [v](Scope &) -> CallResult {
             ScriptValue value;
+            value.reference = false;
             value.type = ValueType::Float;
             value.value = v.value;
             return value;

@@ -6,6 +6,7 @@
 #include <lsl/runtime/world/simulator.hh>
 #include <lsl/runtime/library/functions.hh>
 #include <lsl/runtime/world/script/error.hh>
+#include <fstream>
 
 lsl::runtime::ScriptValue MakeList(lsl::runtime::List const & l) {
     lsl::runtime::ScriptValue v;
@@ -131,6 +132,14 @@ int main(int argc, char const **argv)
             return CallResult();
         }
     };
+    auto llWhisper = CompiledScriptFunction{
+        ValueType::Void,
+        {ValueType::Integer, ValueType::String},
+        [](ScriptFunctionCall const & args) -> CallResult {
+            printf("llWhisper: %s\n", args.arguments[1].as_string().c_str());
+            return CallResult();
+        }
+    };
     auto llOwnerSay = CompiledScriptFunction{
         ValueType::Void,
         {ValueType::String},
@@ -201,7 +210,9 @@ int main(int argc, char const **argv)
         {ValueType::List, ValueType::Integer},
         [](ScriptFunctionCall const & args) -> CallResult {
             printf("llList2Integer();\n");
-            return CallResult(MakeInt(args.arguments[0].as_list().at(args.arguments[1].as_integer()).as_integer()));
+            auto i = args.arguments[1].as_integer();
+            auto l =  args.arguments[0].as_list();
+            return CallResult(MakeInt(l.at(i).as_integer()));
         }
     };
     auto llGetListLength = CompiledScriptFunction{
@@ -269,9 +280,37 @@ int main(int argc, char const **argv)
             return CallResult(MakeList(lsl::runtime::lib::llDeleteSubList(args.caller, args.arguments[0].as_list(), args.arguments[1].as_integer(), args.arguments[2].as_integer())));
         }
     };
+    bool timerSet = false;
+    auto llSetTimerEvent = CompiledScriptFunction{
+        ValueType::Void,
+        {ValueType::Float},
+        [&timerSet](ScriptFunctionCall const & args) -> CallResult {
+            timerSet = args.arguments[0].as_float() != 0;
+            printf("llSetTimerEvent - > timer is now: %d\n", timerSet ? 1 : 0);
+            return CallResult({});
+        }
+    };
 
+    auto llSetText = CompiledScriptFunction{
+        ValueType::Void,
+        {ValueType::String, ValueType::Vector, ValueType::Float},
+        [](ScriptFunctionCall const & args) -> CallResult {
+            std::ofstream ofs("text.out");
+            ofs << args.arguments[1].as_string() + args.arguments[0].as_string();
+            return CallResult({});
+        }
+    };
+
+    auto llList2List = CompiledScriptFunction{
+        ValueType::List,
+        {ValueType::List, ValueType::Integer, ValueType::Integer},
+        [](ScriptFunctionCall const & args) -> CallResult {
+            return CallResult(MakeList(lsl::runtime::lib::llList2List(args.caller, args.arguments[0].as_list(), args.arguments[1].as_integer(), args.arguments[2].as_integer())));
+        }
+    };
 
     get_script_library().functions["llSay"] = std::make_shared<ScriptFunction>(llSay);
+    get_script_library().functions["llWhisper"] = std::make_shared<ScriptFunction>(llWhisper);
     get_script_library().functions["llOwnerSay"] = std::make_shared<ScriptFunction>(llOwnerSay);
     get_script_library().functions["llInstantMessage"] = std::make_shared<ScriptFunction>(llInstantMessage);
     get_script_library().functions["llHTTPRequest"] = std::make_shared<ScriptFunction>(llHTTPRequest);
@@ -288,11 +327,17 @@ int main(int argc, char const **argv)
     get_script_library().functions["llDumpList2String"] = std::make_shared<ScriptFunction>(llDumpList2String);
     get_script_library().functions["llParseStringKeepNulls"] = std::make_shared<ScriptFunction>(llParseStringKeepNulls);
     get_script_library().functions["llFrand"] = std::make_shared<ScriptFunction>(llFrand);
+    get_script_library().functions["llSetTimerEvent"] = std::make_shared<ScriptFunction>(llSetTimerEvent);
+    get_script_library().functions["llSetText"] = std::make_shared<ScriptFunction>(llSetText);
+    get_script_library().functions["llList2List"] = std::make_shared<ScriptFunction>(llList2List);
 
 
     auto script = eval_script("Fake", scr);
 
     script->dispatch_event("state_entry", {});
+    while(timerSet) {
+        script->dispatch_event("timer", {});
+    }
     script->dispatch_event("state_exit", {});
 #endif
     // auto script = Script("foo");

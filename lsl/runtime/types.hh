@@ -88,6 +88,8 @@ struct ScriptValue {
     >::type value_type;
 
     typedef std::vector<ScriptValue> list_type;
+    ScriptValue() : type(), value(), reference(false){}
+    ScriptValue(ValueType t, value_type const & v, bool r) : type(t), value(v), reference(r){}
 
     ValueType   type;
     value_type  value;
