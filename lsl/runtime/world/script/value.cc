@@ -150,4 +150,30 @@ bool operator==(ScriptValue const & left, ScriptValue const & right) {
     return boost::apply_visitor(comparison_visitor(right.value), left.value);
 }
 
+struct less_visitor : boost::static_visitor < bool > {
+    less_visitor(ScriptValue::value_type const & right)
+        : right_(right)
+    {}
+
+    template< typename T >
+    bool operator()(T const & left) const {
+        return left < boost::get<T>(right_.get());
+    }
+
+    bool operator()(boost::reference_wrapper<ScriptValue::float_type> const & left) const {
+        return left.get() < boost::get<boost::reference_wrapper<ScriptValue::float_type>>(right_.get()).get();
+    }
+
+    template< typename T >
+    bool operator()(boost::reference_wrapper<T> const & left) const {
+        return boost::apply_visitor(less_visitor(boost::get<boost::reference_wrapper<T>>(right_.get()).get().value), left.get().value);
+    }
+
+    boost::reference_wrapper<ScriptValue::value_type const> right_;
+};
+
+bool operator<(ScriptValue const & left, ScriptValue const & right) {
+    return boost::apply_visitor(less_visitor(right.value), left.value);
+}
+
 }}

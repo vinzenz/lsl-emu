@@ -82,6 +82,7 @@ Vector   llList2Vector(ScriptRef, List, Integer);
 Rotation llList2Rot(ScriptRef, List, Integer);
 List     llList2List(ScriptRef, List, Integer, Integer);
 List     llDeleteSubList(ScriptRef, List, Integer, Integer);
+List     llListReplaceList(ScriptRef, List, List, Integer, Integer);
 Integer  llGetListEntryType(ScriptRef, List, Integer);
 String   llList2CSV(ScriptRef, List);
 List     llCSV2List(ScriptRef, String);
@@ -92,7 +93,7 @@ Integer  llFindList(ScriptRef, List, List);
 List     llParseString2List(ScriptRef, String, List, List);
 List     llParseStringKeepNulls(ScriptRef, String, List, List);
 String   llDumpList2String(ScriptRef, List, String);
-
+Integer     llListFindList(ScriptRef, List, List);
 
 
 }}}

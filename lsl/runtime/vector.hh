@@ -131,6 +131,11 @@ namespace runtime {
     inline bool operator == (Vector const & a, Vector const & b) {
         return a.x == b.x && a.y == b.y && a.z == b.z;
     }
+
+    inline bool operator < (Vector const & a, Vector const & b) {
+        return mag(a) < mag(b);
+    }
+
 }}
 
 #endif //GUARD_LSL_RUNTIME_VECTOR_HH_INCLUDED

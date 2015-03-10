@@ -22,6 +22,11 @@ bool CorrectIndex(size_t max, Integer & s, Integer & e);
 
 List llListSort(ScriptRef, List l, Integer stride, Integer ascending) {
     printf("TODO: Not implemented - llListSort");
+    if(ascending) {
+        std::sort(l.begin(), l.end(), std::greater<ScriptValue>());
+    } else {
+        std::sort(l.begin(), l.end(), std::less<ScriptValue>());
+    }
     return l;
 }
 
@@ -137,13 +142,25 @@ List     llList2ListStrided(ScriptRef, List, Integer, Integer, Integer) {
 
 }
 
+List     llListReplaceList(ScriptRef r, List source, List ins, Integer s, Integer e) {
+    if(CorrectIndex(source.size(), s, e)) {
+        source.erase(source.begin() + s, source.begin() + e + 1);
+        return llListInsertList(r, source, ins, s);
+    }
+    return source;
+}
+
 List     llListInsertList(ScriptRef, List l, List n, Integer i) {
     l.insert(l.begin() + i, n.begin(), n.end());
     return l;
 }
 
-Integer  llFindList(ScriptRef, List l, List f) {
-
+Integer  llListFindList(ScriptRef, List l, List f) {
+    auto r = std::search(l.begin(), l.end(), f.begin(), f.end());
+    if(r == l.end()) {
+        return -1;
+    }
+    return Integer(r - l.begin());
 }
 
 static List llParseString2ListImpl(ScriptRef, String str, List sep, List spac, bool compress) {

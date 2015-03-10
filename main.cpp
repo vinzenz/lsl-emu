@@ -6,6 +6,9 @@
 #include <lsl/runtime/world/simulator.hh>
 #include <lsl/runtime/library/functions.hh>
 #include <lsl/runtime/world/script/error.hh>
+#include <sqlite/connection.hpp>
+#include <sqlite/execute.hpp>
+#include <sqlite/transaction.hpp>
 #include <fstream>
 
 lsl::runtime::ScriptValue MakeList(lsl::runtime::List const & l) {
@@ -215,6 +218,18 @@ int main(int argc, char const **argv)
             return CallResult(MakeInt(l.at(i).as_integer()));
         }
     };
+    auto llListReplaceList = CompiledScriptFunction{
+            ValueType::List,
+            {ValueType::List, ValueType::List, ValueType::Integer, ValueType::Integer},
+            [](ScriptFunctionCall const & args) -> CallResult {
+                printf("llListReplaceList();\n");
+                auto idx1 = args.arguments[2].as_integer();
+                auto idx2 = args.arguments[3].as_integer();
+                auto l =  args.arguments[0].as_list();
+                auto l2 = args.arguments[1].as_list();
+                return CallResult(MakeList(lsl::runtime::lib::llListReplaceList(args.caller, l, l2, idx1, idx2)));
+            }
+        };
     auto llGetListLength = CompiledScriptFunction{
         ValueType::Integer,
         {ValueType::List},
@@ -300,12 +315,46 @@ int main(int argc, char const **argv)
             return CallResult({});
         }
     };
+    auto llListFindList = CompiledScriptFunction{
+        ValueType::Integer,
+        {ValueType::List, ValueType::List},
+        [](ScriptFunctionCall const & args) -> CallResult {
+            return CallResult(MakeInt(lsl::runtime::lib::llListFindList(args.caller, args.arguments[0].as_list(), args.arguments[1].as_list())));
+        }
+    };
+
+    auto llListSort = CompiledScriptFunction{
+        ValueType::List,
+        {ValueType::List, ValueType::Integer, ValueType::Integer},
+        [](ScriptFunctionCall const & args) -> CallResult {
+            return CallResult(MakeList(lsl::runtime::lib::llListSort(args.caller, args.arguments[0].as_list(), args.arguments[1].as_integer(), args.arguments[2].as_integer())));
+        }
+    };
 
     auto llList2List = CompiledScriptFunction{
         ValueType::List,
         {ValueType::List, ValueType::Integer, ValueType::Integer},
         [](ScriptFunctionCall const & args) -> CallResult {
             return CallResult(MakeList(lsl::runtime::lib::llList2List(args.caller, args.arguments[0].as_list(), args.arguments[1].as_integer(), args.arguments[2].as_integer())));
+        }
+    };
+
+    sqlite::connection con("results.db");
+    sqlite::execute(con, "CREATE TABLE IF NOT EXISTS poker_result (result INTEGER NOT NULL );", true);
+    sqlite::execute inserter(con, "INSERT INTO poker_result (result) VALUES(?);", false);
+    sqlite::transaction trans(con, sqlite::transaction_type::deferred);
+    auto sqlInsert = CompiledScriptFunction{
+        ValueType::Void,
+        {ValueType::Integer},
+        [&con, &inserter](ScriptFunctionCall const & args) -> CallResult {
+            try {
+                inserter.clear();
+                inserter % args.arguments[0].as_integer();
+                inserter();
+            } catch(...) {
+                printf("ERROR: Failed to insert data!");
+            }
+            return CallResult();
         }
     };
 
@@ -330,11 +379,16 @@ int main(int argc, char const **argv)
     get_script_library().functions["llSetTimerEvent"] = std::make_shared<ScriptFunction>(llSetTimerEvent);
     get_script_library().functions["llSetText"] = std::make_shared<ScriptFunction>(llSetText);
     get_script_library().functions["llList2List"] = std::make_shared<ScriptFunction>(llList2List);
+    get_script_library().functions["llListReplaceList"] = std::make_shared<ScriptFunction>(llListReplaceList);
+    get_script_library().functions["llListSort"] = std::make_shared<ScriptFunction>(llListSort);
+    get_script_library().functions["llListFindList"] = std::make_shared<ScriptFunction>(llListFindList);
+    get_script_library().functions["sqlInsert"] = std::make_shared<ScriptFunction>(sqlInsert);
 
 
     auto script = eval_script("Fake", scr);
 
     script->dispatch_event("state_entry", {});
+    trans.commit();
     while(timerSet) {
         script->dispatch_event("timer", {});
     }

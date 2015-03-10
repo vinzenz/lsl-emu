@@ -185,6 +185,10 @@ namespace runtime {
         }
         return q;
     }
+
+    inline bool operator<(Quaternion l, Quaternion r) {
+        return mag(l) < mag(r);
+    }
 }
 }
 

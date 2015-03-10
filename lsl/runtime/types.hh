@@ -113,7 +113,11 @@ struct ScriptValue {
     boost::reference_wrapper<ScriptValue> & get_ref();
 };
 bool operator==(ScriptValue const & left, ScriptValue const & right);
-// bool operator<(ScriptValue const & left, ScriptValue const & right);
+bool operator<(ScriptValue const & left, ScriptValue const & right);
+
+inline bool operator>(ScriptValue const & left, ScriptValue const & right) {
+    return right < left;
+}
 
 typedef ScriptValue::list_type List;
 

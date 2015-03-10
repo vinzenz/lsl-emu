@@ -568,6 +568,41 @@ CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::Comparison co
     };
 }
 
+struct return_value_visitor : boost::static_visitor<ScriptValue> {
+    ScriptValue operator()(boost::reference_wrapper<ScriptValue> const & v) const {
+        return boost::apply_visitor(*this, v.get().value);
+    }
+
+    ScriptValue operator()(boost::reference_wrapper<ScriptValue::float_type> f) const {
+        return ScriptValue(ValueType::Float, f.get(), false);
+    }
+
+    ScriptValue operator()(ScriptValue::list_type const & l) const {
+        return ScriptValue{ValueType::List, l, false};
+    }
+
+    ScriptValue operator()(ScriptValue::integer_type const & i) const {
+        return ScriptValue{ValueType::Integer, i, false};
+    }
+
+    ScriptValue operator()(ScriptValue::float_type const & f) const {
+        return ScriptValue{ValueType::Float, f, false};
+    }
+
+    ScriptValue operator()(ScriptValue::string_type const & s) const {
+        return ScriptValue{ValueType::String, s, false};
+    }
+
+    ScriptValue operator()(ScriptValue::vector_type const & v) const {
+        return ScriptValue{ValueType::Vector, v, false};
+    }
+
+    ScriptValue operator()(ScriptValue::rotation_type const & r) const {
+        return ScriptValue{ValueType::Rotation, r, false};
+    }
+};
+
+
 CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::Return const & v) {
     if(v.value && scope.return_type.empty()) {
         throw ScriptError("Cannot return value from this function.", v.line, v.column);
@@ -581,7 +616,7 @@ CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::Return const 
             ValueType::Void,
             false,
             [res](Scope & scope) -> CallResult {
-                throw FunctionReturnException(res.compiled(scope).get());
+                throw FunctionReturnException(boost::apply_visitor(return_value_visitor(), res.compiled(scope).get().value));
                 return CallResult();
             }
         };
