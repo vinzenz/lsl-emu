@@ -242,8 +242,11 @@ void print(PrinterState &, Float const & f) {
 }
 
 void print(PrinterState & state, BinOp const & b) {
+    bool binop = b.left->type == AstType::BinOp;
+    if(binop) printf("(");
     print(state, b.left);
-    printf("  %s ", to_string(b.op));
+    if(binop) printf(")");
+    printf(" %s ", to_string(b.op));
     print(state, b.right);
 }
 
@@ -265,8 +268,9 @@ void print(PrinterState & state, UnaryOp const & u) {
 }
 
 void print(PrinterState & state, TypeCast const & t) {
-    printf("(%s)", t.target_type.c_str());
+    printf("(%s)(", t.target_type.c_str());
     print(state, t.right);
+    printf(")");
 }
 
 void print(PrinterState &, TypeDecl const & t) {

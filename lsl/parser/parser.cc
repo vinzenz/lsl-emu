@@ -90,26 +90,32 @@ bool vector_init(State & s, AstPtr & target, parser_fun_t fun = expression) {
     }
 
     if(!fun(s, ast->x)) {
+        syntax_error(s, ast->x, "Invalid or unexpected expression");
         return false;
     }
 
     if(!expect(s, TokenKind::Comma)) {
+        syntax_error(s, ast->y, "Missing comma");
         return false;
     }
 
     if(!fun(s, ast->y)) {
+        syntax_error(s, ast->y, "Invalid or unexpected expression");
         return false;
     }
 
     if(!expect(s, TokenKind::Comma)) {
+        syntax_error(s, ast->y, "Missing comma");
         return false;
     }
 
     if(!fun(s, ast->z)) {
+        syntax_error(s, ast->z, "Invalid or unexpected expression");
         return false;
     }
 
     if(!expect(s, TokenKind::Greater)) {
+        syntax_error(s, ast->z, "Missing closing '>'");
         return false;
     }
 
@@ -127,31 +133,38 @@ bool quaternion_init(State & s, AstPtr & target, parser_fun_t fun = expression){
     }
 
     if(!fun(s, ast->x)) {
+        syntax_error(s, ast->x, "Invalid or unexpected expression");
         return false;
     }
 
     if(!expect(s, TokenKind::Comma)) {
+        syntax_error(s, ast->x, "Missing comma");
         return false;
     }
 
     if(!fun(s, ast->y)) {
+        syntax_error(s, ast->y, "Invalid or unexpected expression");
         return false;
     }
 
     if(!expect(s, TokenKind::Comma)) {
+        syntax_error(s, ast->y, "Missing comma");
         return false;
     }
 
     if(!fun(s, ast->z)) {
+        syntax_error(s, ast->z, "Invalid or unexpected expression");
         return false;
     }
 
 
     if(!expect(s, TokenKind::Comma)) {
+        syntax_error(s, ast->z, "Missing comma");
         return false;
     }
 
     if(!fun(s, ast->s)) {
+        syntax_error(s, ast->s, "Invalid or unexpected expression");
         return false;
     }
 
@@ -173,15 +186,23 @@ bool list_init(State & s, AstPtr & target, parser_fun_t fun = expression){
     }
 
     AstPtr item;
+    bool lastcomma = false;
     while(fun(s, item)) {
+        lastcomma = false;
         ast->elements.push_back(item);
         item.reset();
         if(!expect(s, TokenKind::Comma)) {
             break;
         }
+        lastcomma = true;
+    }
+
+    if(lastcomma) {
+        syntax_error(s, ast, "Trailing comma");
     }
 
     if(!expect(s, TokenKind::RightBracket)) {
+        syntax_error(s, ast, "Expected closing bracket");
         return false;
     }
 
@@ -379,12 +400,14 @@ bool cast_or_expression(State & s, AstPtr & target, parser_fun_t cast_inner_fun,
         String name;
         if(consume_value(s, TokenKind::TypeName, name)) {
             if(!expect(s, TokenKind::RightParen)) {
+                syntax_error(s, target, "Missing ')'");
                 return false;
             }
             auto cast = create<TypeCast>(target);
             location(s, cast);
             cast->target_type.swap(name);
             if(!cast_inner_fun(s, cast->right)) {
+                syntax_error(s, cast->right, "Invalid expression");
                 return false;
             }
             return guard.commit();
@@ -399,6 +422,7 @@ bool cast_or_expression(State & s, AstPtr & target, parser_fun_t cast_inner_fun,
 }
 
 bool simple_assignable(State & s, AstPtr & target) {
+    return expression(s, target);
     return cast_or_expression(s, target, simple_assignable, simple_assignable)
         || simple_assignable_no_list(s, target)
         || list_constant(s, target)
@@ -415,6 +439,7 @@ bool name_type(State & s, AstPtr & target) {
     }
 
     if(!consume_value(s, Token::Identifier, var->name)) {
+        syntax_error(s, var, "Expected identifier name");
         return false;
     }
     return guard.commit();
@@ -428,6 +453,7 @@ bool global_variable(State & s, AstPtr & target) {
     if(expect(s, TokenKind::Equal)) {
         auto var = ast_cast<VarDecl>(target);
         if(!simple_assignable(s, var->right)) {
+            syntax_error(s, var->right, "Expected expression");
             return false;
         }
     }
@@ -443,6 +469,7 @@ bool declaration(State & s, AstPtr & target) {
     if(expect(s, TokenKind::Equal)) {
         auto var = ast_cast<VarDecl>(target);
         if(!expression(s, var->right)) {
+            syntax_error(s, var->right, "Expected expression");
             return false;
         }
     }
@@ -489,6 +516,7 @@ bool global_function(State & s, AstPtr & target, bool is_event = false) {
     } while(expect(s, TokenKind::Comma));
 
     if(!expect(s, TokenKind::RightParen)) {
+        syntax_error(s, target, "Expected closing ')'");
         return false;
     }
 
@@ -517,6 +545,7 @@ bool call(State & s, AstPtr & target) {
     while(!is(s, TokenKind::RightParen)) {
         AstPtr arg;
         if(!expression(s, arg)) {
+            syntax_error(s, arg, "Expected expression");
             return false;
         }
         call_->parameters.push_back(arg);
@@ -526,6 +555,7 @@ bool call(State & s, AstPtr & target) {
     }
 
     if(!expect(s, TokenKind::RightParen)) {
+        syntax_error(s, call_, "Expected closing ')'");
         return false;
     }
 
@@ -595,6 +625,7 @@ bool postfix_expr(State &s, AstPtr &target) {
         target = tmp;
     }
     else {
+        syntax_error(s, target, "Expected expression");
         return false;
     }
     return bool(target) && guard.commit();
@@ -775,6 +806,7 @@ bool bitwise_and_expr(State &s, AstPtr &target) {
         else {
             binop->op = AstBinOpType::BitAnd;
             if(!bitwise_and_expr(s, binop->right)) {
+                syntax_error(s, binop->right, "Expected expression");
                 return false;
             }
         }
@@ -797,6 +829,7 @@ bool bitwise_xor_expr(State &s, AstPtr &target) {
         else {
             binop->op = AstBinOpType::BitXor;
             if(!bitwise_xor_expr(s, binop->right)) {
+                syntax_error(s, binop->right, "Expected expression");
                 return false;
             }
         }
@@ -819,6 +852,7 @@ bool bitwise_or_expr(State &s, AstPtr &target) {
         else {
             binop->op = AstBinOpType::BitOr;
             if(!bitwise_or_expr(s, binop->right)) {
+                syntax_error(s, binop->right, "Expected expression");
                 return false;
             }
         }
@@ -844,6 +878,7 @@ bool logical_expr(State &s, AstPtr &target) {
         }
         if(boolop->op != AstBoolOpType::Undefined) {
             if(!logical_expr(s, boolop->right)) {
+                syntax_error(s, boolop->right, "Expected expression");
                 return false;
             }
         }
@@ -922,6 +957,7 @@ bool statement(State & s, AstPtr & target) {
             statech->state = "default";
         }
         else if(!consume_value(s, Token::Identifier, statech->state)) {
+            syntax_error(s, statech, "Expected identifier");
             return false;
         }
         needsSemiColon = true;
@@ -967,14 +1003,17 @@ bool statement(State & s, AstPtr & target) {
         location(s, if_);
 
         if(!expect(s, TokenKind::LeftParen)) {
+            syntax_error(s, if_, "Expected '('");
             return false;
         }
 
         if(!expression(s, if_->condition)) {
+            syntax_error(s, if_, "Expected expression");
             return false;
         }
 
         if(!expect(s, TokenKind::RightParen)) {
+            syntax_error(s, if_, "Expected ')'");
             return false;
         }
 
@@ -984,6 +1023,7 @@ bool statement(State & s, AstPtr & target) {
 
         if(expect(s, Token::KeywordElse)) {
             if(!statement(s, if_->elseIf)) {
+                syntax_error(s, if_, "Expected statement, { or 'if'");
                 return false;
             }
         }
@@ -993,21 +1033,29 @@ bool statement(State & s, AstPtr & target) {
         location(s, do_);
 
         if(!statement(s, do_->body)) {
+            syntax_error(s, do_, "Expected statement");
             return false;
         }
 
         if(expect(s, Token::KeywordWhile)) {
             if(!expect(s, TokenKind::LeftParen)) {
+                syntax_error(s, do_, "Expected '('");
                 return false;
             }
 
             if(!expression(s, do_->condition)) {
+                syntax_error(s, do_, "Expected expression");
                 return false;
             }
 
             if(!expect(s, TokenKind::RightParen)) {
+                syntax_error(s, do_, "Expected ')'");
                 return false;
             }
+        }
+        else {
+            syntax_error(s, do_, "Expected while");
+            return false;
         }
     }
     else if(expect(s, Token::KeywordWhile)) {
@@ -1015,14 +1063,17 @@ bool statement(State & s, AstPtr & target) {
         location(s, while_);
 
         if(!expect(s, TokenKind::LeftParen)) {
+            syntax_error(s, while_, "Expected '('");
             return false;
         }
 
         if(!expression(s, while_->condition)) {
+            syntax_error(s, while_, "Expected expression");
             return false;
         }
 
         if(!expect(s, TokenKind::RightParen)) {
+            syntax_error(s, while_, "Expected ')'");
             return false;
         }
 
@@ -1085,6 +1136,9 @@ bool statement(State & s, AstPtr & target) {
 bool globals(State & s, Globals & target) {
     StateGuard guard(s);
     while(!is(s, Token::KeywordDefault)) {
+        if(is(s, Token::End)) {
+            break;
+        }
         AstPtr glob;
         if(!global(s, glob)) {
             return false;
@@ -1150,6 +1204,7 @@ bool states(State & s, States & states) {
 
     AstPtr defstate;
     if(!default_state(s, defstate)) {
+        syntax_error(s, defstate, "Expected default state definition");
         return false;
     }
     states.states.push_back(std::static_pointer_cast<StateDef>(defstate));
@@ -1187,7 +1242,9 @@ bool compound_statement(State & s, std::vector<AstPtr> & stmts) {
 
 bool script(State & s, Script & result) {
     StateGuard guard(s);
-    globals(s, result.globals);
+    if(!globals(s, result.globals)) {
+        return false;
+    }
     if(!states(s, result.states)) {
         return false;
     }
