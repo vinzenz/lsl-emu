@@ -40,6 +40,10 @@ bool CorrectIndex(size_t max, Integer & s, Integer & e) {
     return true;
 }
 
+Integer llStringLength(ScriptRef, String s) {
+    return static_cast<Integer>(s.size());
+}
+
 String llGetSubString(ScriptRef, String str, Integer s, Integer e) {
     if(!CorrectIndex(str.size(), s, e)) {
         return String();

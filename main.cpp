@@ -50,6 +50,20 @@ lsl::runtime::ScriptValue MakeFloat(lsl::runtime::Float const & f) {
     v.reference = false;
     return v;
 }
+lsl::runtime::ScriptValue MakeVector(lsl::runtime::Vector const & f) {
+    lsl::runtime::ScriptValue v;
+    v.type = lsl::runtime::ValueType::Vector;
+    v.value = f;
+    v.reference = false;
+    return v;
+}
+lsl::runtime::ScriptValue MakeRotation(lsl::runtime::Rotation const & f) {
+    lsl::runtime::ScriptValue v;
+    v.type = lsl::runtime::ValueType::Rotation;
+    v.value = f;
+    v.reference = false;
+    return v;
+}
 
 int main(int argc, char const **argv)
 {
@@ -218,6 +232,43 @@ int main(int argc, char const **argv)
             return CallResult(MakeInt(l.at(i).as_integer()));
         }
     };
+    auto llList2Vector = CompiledScriptFunction{
+        ValueType::Vector,
+        {ValueType::List, ValueType::Integer},
+        [](ScriptFunctionCall const & args) -> CallResult {
+            printf("llList2Vector();\n");
+            auto i = args.arguments[1].as_integer();
+            auto l =  args.arguments[0].as_list();
+            return CallResult(MakeVector(l.at(i).as_vector()));
+        }
+    };
+    auto llList2Rot = CompiledScriptFunction{
+        ValueType::Rotation,
+        {ValueType::List, ValueType::Integer},
+        [](ScriptFunctionCall const & args) -> CallResult {
+            printf("llList2Vector();\n");
+            auto i = args.arguments[1].as_integer();
+            auto l =  args.arguments[0].as_list();
+            return CallResult(MakeRotation(l.at(i).as_rotation()));
+        }
+    };
+    auto llList2Float = CompiledScriptFunction{
+        ValueType::Float,
+        {ValueType::List, ValueType::Integer},
+        [](ScriptFunctionCall const & args) -> CallResult {
+            printf("llList2Float();\n");
+            auto i = args.arguments[1].as_integer();
+            auto l =  args.arguments[0].as_list();
+            return CallResult(MakeFloat(l.at(i).as_float()));
+        }
+    };
+    auto llGetListEntryType = CompiledScriptFunction{
+        ValueType::Integer,
+        {ValueType::List, ValueType::Integer},
+        [](ScriptFunctionCall const & args) -> CallResult {
+            return CallResult(MakeInt(lsl::runtime::lib::llGetListEntryType(args.caller, args.arguments[0].as_list(), args.arguments[1].as_integer())));
+        }
+    };
     auto llListReplaceList = CompiledScriptFunction{
             ValueType::List,
             {ValueType::List, ValueType::List, ValueType::Integer, ValueType::Integer},
@@ -270,14 +321,7 @@ int main(int argc, char const **argv)
             return CallResult(MakeString(res));
         }
     };
-    auto llParseStringKeepNulls = CompiledScriptFunction{
-        ValueType::List,
-        {ValueType::String, ValueType::List, ValueType::List},
-        [](ScriptFunctionCall const & args) -> CallResult {
-            printf("llParseStringKeepNulls();\n");
-            return CallResult(MakeList({}));
-        }
-    };
+
     auto llFrand = CompiledScriptFunction{
         ValueType::Float,
         {ValueType::Float},
@@ -339,6 +383,138 @@ int main(int argc, char const **argv)
         }
     };
 
+    auto llBase64ToInteger = CompiledScriptFunction{
+        ValueType::Integer,
+        {ValueType::String},
+        [](ScriptFunctionCall const & args) -> CallResult {
+            return CallResult(MakeInt(lsl::runtime::lib::llBase64ToInteger(args.caller, args.arguments[0].as_string())));
+        }
+    };
+    auto llStringToBase64 = CompiledScriptFunction{
+        ValueType::String,
+        {ValueType::String},
+        [](ScriptFunctionCall const & args) -> CallResult {
+            return CallResult(MakeString(lsl::runtime::lib::llStringToBase64(args.caller, args.arguments[0].as_string())));
+        }
+    };
+    auto llSubStringIndex = CompiledScriptFunction{
+        ValueType::Integer,
+        {ValueType::String, ValueType::String},
+        [](ScriptFunctionCall const & args) -> CallResult {
+
+            return CallResult(MakeInt(lsl::runtime::lib::llSubStringIndex(args.caller, args.arguments[0].as_string(), args.arguments[1].as_string())));
+        }
+    };
+    auto llGetSubString = CompiledScriptFunction{
+        ValueType::String,
+        {ValueType::String, ValueType::Integer, ValueType::Integer},
+        [](ScriptFunctionCall const & args) -> CallResult {
+            return CallResult(MakeString(lsl::runtime::lib::llGetSubString(args.caller, args.arguments[0].as_string(), args.arguments[1].as_integer(), args.arguments[2].as_integer())));
+        }
+    };
+    auto llStringLength = CompiledScriptFunction{
+        ValueType::Integer,
+        {ValueType::String},
+        [](ScriptFunctionCall const & args) -> CallResult {
+            return CallResult(MakeInt(lsl::runtime::lib::llStringLength(args.caller, args.arguments[0].as_string())));
+        }
+    };
+    auto llParseStringKeepNulls = CompiledScriptFunction{
+        ValueType::List,
+        {ValueType::String, ValueType::List, ValueType::List},
+        [](ScriptFunctionCall const & args) -> CallResult {
+            return CallResult(MakeList(lsl::runtime::lib::llParseStringKeepNulls(args.caller, args.arguments[0].as_string(), args.arguments[1].as_list(), args.arguments[2].as_list())));
+        }
+    };
+    auto llParseString2List = CompiledScriptFunction{
+        ValueType::List,
+        {ValueType::String, ValueType::List, ValueType::List},
+        [](ScriptFunctionCall const & args) -> CallResult {
+            return CallResult(MakeList(lsl::runtime::lib::llParseString2List(args.caller, args.arguments[0].as_string(), args.arguments[1].as_list(), args.arguments[2].as_list())));
+        }
+    };
+    auto llEscapeURL = CompiledScriptFunction{
+        ValueType::String,
+        {ValueType::String},
+        [](ScriptFunctionCall const & args) -> CallResult {
+            return CallResult(MakeString(lsl::runtime::lib::llEscapeURL(args.caller, args.arguments[0].as_string())));
+        }
+    };
+    auto llUnescapeURL = CompiledScriptFunction{
+        ValueType::String,
+        {ValueType::String},
+        [](ScriptFunctionCall const & args) -> CallResult {
+            return CallResult(MakeString(lsl::runtime::lib::llUnescapeURL(args.caller, args.arguments[0].as_string())));
+        }
+    };
+    auto llDeleteSubString = CompiledScriptFunction{
+        ValueType::String,
+        {ValueType::String, ValueType::Integer, ValueType::Integer},
+        [](ScriptFunctionCall const & args) -> CallResult {
+            return CallResult(MakeString(lsl::runtime::lib::llDeleteSubString(args.caller, args.arguments[0].as_string(), args.arguments[1].as_integer(), args.arguments[2].as_integer())));
+        }
+    };
+    auto llLog = CompiledScriptFunction{
+        ValueType::Float,
+        {ValueType::Float},
+        [](ScriptFunctionCall const & args) -> CallResult {
+            return CallResult(MakeFloat(lsl::runtime::lib::llLog(args.caller, args.arguments[0].as_float())));
+        }
+    };
+
+    auto llCeil = CompiledScriptFunction{
+        ValueType::Float,
+        {ValueType::Float},
+        [](ScriptFunctionCall const & args) -> CallResult {
+            return CallResult(MakeFloat(lsl::runtime::lib::llCeil(args.caller, args.arguments[0].as_float())));
+        }
+    };
+
+    auto llFabs = CompiledScriptFunction{
+        ValueType::Float,
+        {ValueType::Float},
+        [](ScriptFunctionCall const & args) -> CallResult {
+            return CallResult(MakeFloat(lsl::runtime::lib::llFabs(args.caller, args.arguments[0].as_float())));
+        }
+    };
+
+    auto llPow = CompiledScriptFunction{
+        ValueType::Float,
+        {ValueType::Float, ValueType::Float},
+        [](ScriptFunctionCall const & args) -> CallResult {
+            return CallResult(MakeFloat(lsl::runtime::lib::llPow(args.caller, args.arguments[0].as_float(), args.arguments[1].as_float())));
+        }
+    };
+
+    auto llFloor = CompiledScriptFunction{
+        ValueType::Integer,
+        {ValueType::Float},
+        [](ScriptFunctionCall const & args) -> CallResult {
+            return CallResult(MakeInt(lsl::runtime::lib::llFloor(args.caller, args.arguments[0].as_float())));
+        }
+    };
+    auto llCSV2List = CompiledScriptFunction{
+        ValueType::List,
+        {ValueType::String},
+        [](ScriptFunctionCall const & args) -> CallResult {
+            return CallResult(MakeList(lsl::runtime::lib::llCSV2List(args.caller, args.arguments[0].as_string())));
+        }
+    };
+    auto llList2CSV = CompiledScriptFunction{
+        ValueType::String,
+        {ValueType::List},
+        [](ScriptFunctionCall const & args) -> CallResult {
+            return CallResult(MakeString(lsl::runtime::lib::llList2CSV(args.caller, args.arguments[0].as_list())));
+        }
+    };
+    auto llBase64ToString = CompiledScriptFunction{
+        ValueType::String,
+        {ValueType::String},
+        [](ScriptFunctionCall const & args) -> CallResult {
+            return CallResult(MakeString(lsl::runtime::lib::llBase64ToString(args.caller, args.arguments[0].as_string())));
+        }
+    };
+
     sqlite::connection con("results.db");
     sqlite::execute(con, "CREATE TABLE IF NOT EXISTS poker_result (result INTEGER NOT NULL );", true);
     sqlite::execute inserter(con, "INSERT INTO poker_result (result) VALUES(?);", false);
@@ -383,7 +559,28 @@ int main(int argc, char const **argv)
     get_script_library().functions["llListSort"] = std::make_shared<ScriptFunction>(llListSort);
     get_script_library().functions["llListFindList"] = std::make_shared<ScriptFunction>(llListFindList);
     get_script_library().functions["sqlInsert"] = std::make_shared<ScriptFunction>(sqlInsert);
-
+    get_script_library().functions["llBase64ToInteger"] = std::make_shared<ScriptFunction>(llBase64ToInteger);
+    get_script_library().functions["llStringToBase64"] = std::make_shared<ScriptFunction>(llStringToBase64);
+    get_script_library().functions["llGetSubString"] = std::make_shared<ScriptFunction>(llGetSubString);
+    get_script_library().functions["llParseString2List"] = std::make_shared<ScriptFunction>(llParseString2List);
+    get_script_library().functions["llParseStringKeepNulls"] = std::make_shared<ScriptFunction>(llParseStringKeepNulls);
+    get_script_library().functions["llUnescapeURL"] = std::make_shared<ScriptFunction>(llUnescapeURL);
+    get_script_library().functions["llEscapeURL"] = std::make_shared<ScriptFunction>(llEscapeURL);
+    get_script_library().functions["llDeleteSubString"] = std::make_shared<ScriptFunction>(llDeleteSubString);
+    get_script_library().functions["llLog"] = std::make_shared<ScriptFunction>(llLog);
+    get_script_library().functions["llFloor"] = std::make_shared<ScriptFunction>(llFloor);
+    get_script_library().functions["llCeil"] = std::make_shared<ScriptFunction>(llCeil);
+    get_script_library().functions["llFabs"] = std::make_shared<ScriptFunction>(llFabs);
+    get_script_library().functions["llPow"] = std::make_shared<ScriptFunction>(llPow);
+    get_script_library().functions["llStringLength"] = std::make_shared<ScriptFunction>(llStringLength);
+    get_script_library().functions["llGetListEntryType"] = std::make_shared<ScriptFunction>(llGetListEntryType);
+    get_script_library().functions["llList2Float"] = std::make_shared<ScriptFunction>(llList2Float);
+    get_script_library().functions["llList2Vector"] = std::make_shared<ScriptFunction>(llList2Vector);
+    get_script_library().functions["llList2Rot"] = std::make_shared<ScriptFunction>(llList2Rot);
+    get_script_library().functions["llSubStringIndex"] = std::make_shared<ScriptFunction>(llSubStringIndex);
+    get_script_library().functions["llCSV2List"] = std::make_shared<ScriptFunction>(llCSV2List);
+    get_script_library().functions["llList2CSV"] = std::make_shared<ScriptFunction>(llList2CSV);
+    get_script_library().functions["llBase64ToString"] = std::make_shared<ScriptFunction>(llBase64ToString);
 
     auto script = eval_script("Fake", scr);
 

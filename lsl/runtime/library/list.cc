@@ -12,6 +12,10 @@
 #include <lsl/utils.hh>
 #include <cmath>
 #include <random>
+#include <algorithm>
+#include <vector>
+#include <tuple>
+#include <type_traits>
 
 namespace lsl {
 namespace runtime {
@@ -120,19 +124,6 @@ String   llList2CSV(ScriptRef, List l) {
     return dumpList2String(l, ", ");
 }
 
-List     llCSV2List(ScriptRef, String s) {
-    std::vector<std::string> splres;
-    boost::algorithm::split(splres, s, boost::algorithm::is_any_of(","));
-    List res;
-    res.reserve(splres.size());
-    for(auto const & elem : splres) {
-        res.push_back(ScriptValue());
-        res.back().value = boost::algorithm::trim_copy(elem);
-        res.back().type = ValueType::String;
-        res.back().reference = false;
-    }
-    return res;
-}
 
 List     llListRandomize(ScriptRef, Integer stride) {
 
@@ -163,9 +154,111 @@ Integer  llListFindList(ScriptRef, List l, List f) {
     return Integer(r - l.begin());
 }
 
-static List llParseString2ListImpl(ScriptRef, String str, List sep, List spac, bool compress) {
-    return List();
+typedef std::vector<std::string> SList;
+typedef std::vector<std::tuple<std::string, bool>> SUList;
+typedef std::string String;
+
+inline SUList unify(SList && sep) {
+    SUList result;
+    for(auto && v : sep) {
+        if(v.empty()) continue;
+        result.emplace_back(std::move(v), true);
+    }
+    return result;
 }
+
+inline std::tuple<String::size_type, SUList::value_type> find_next(String::size_type idx, String const & s, SUList & usep) {
+    auto cur = std::tuple<String::size_type, SUList::value_type>();
+    for(auto & e : usep) {
+        if(std::get<1>(e)) {
+            String::size_type pos = s.find(std::get<0>(e), idx);
+            if(pos != String::npos) {
+                if(pos < std::get<0>(cur) || !std::get<1>(std::get<1>(cur))) {
+                    cur = std::make_tuple(pos, e);
+                }
+            } else {
+                std::get<1>(e) = false;
+            }
+        }
+    }
+    return cur;
+}
+
+template< typename T >
+inline bool found(T const & t) {
+    return std::get<1>(std::get<1>(t));
+}
+
+inline SList parse2list(String s, SList sep, SList spac, bool compact) {
+    auto res = SList();
+    if(s.empty()) {
+        return res;
+    }
+    // Drop all seperators and spacers that are not even present
+    auto usep = unify(std::move(sep));
+    auto uspac = unify(std::move(spac));
+
+    auto idx = String::size_type(0);
+    auto lidx = idx;
+    while(lidx != String::npos && lidx < s.size() - 1) {
+        auto r1 = find_next(lidx, s, usep);
+        auto r2 = find_next(lidx, s, uspac);
+        bool use_r1 = false;
+        bool use_r2 = false;
+        if(found(r1) && found(r2)) {
+            size_t p1 = std::get<0>(r1);
+            size_t p2 = std::get<0>(r2);
+            if(std::get<0>(r1) <= std::get<0>(r2)) {
+                // r1 matches better
+                use_r1 = true;
+            } else {
+                use_r2 = true;
+            }
+        } else if(found(r1)) {
+            use_r1 = true;
+        } else if(found(r2)) {
+            use_r2 = true;
+        }
+        if(use_r1) {
+            res.push_back(s.substr(lidx, std::get<0>(r1) - lidx));
+            lidx = std::get<0>(std::get<1>(r1)).size() + std::get<0>(r1);
+        } else if(use_r2) {
+            res.push_back(s.substr(lidx, std::get<0>(r2) - lidx));
+            res.push_back(std::get<0>(std::get<1>(r2)));
+            lidx = std::get<0>(std::get<1>(r2)).size() + std::get<0>(r2);
+        } else {
+            res.push_back(s.substr(lidx));
+            break;
+        }
+    }
+    if(compact){
+        res.erase(std::remove_if(res.begin(), res.end(), [](String const & s) -> bool { return s.empty(); }), res.end());
+    }
+    return res;
+}
+
+inline SList toSList(List const & l) {
+    auto res = SList();
+    res.reserve(l.size());
+    for(auto const & e : l) {
+        res.emplace_back(e.as_string());
+    }
+    return res;
+}
+
+inline List toList(SList const & l) {
+    auto res = List();
+    res.reserve(l.size());
+    for(auto const & e : l) {
+        res.emplace_back(ValueType::String, e, false);
+    }
+    return res;
+}
+
+static List llParseString2ListImpl(ScriptRef, String str, List sep, List spac, bool compress) {
+    return toList(parse2list(str, toSList(sep), toSList(spac), compress));
+}
+
 
 List     llParseString2List(ScriptRef r, String str, List sep, List spac) {
     return llParseString2ListImpl(r, str, sep, spac, true);
@@ -179,5 +272,10 @@ String   llDumpList2String(ScriptRef, List l, String s) {
     return dumpList2String(l, s);
 }
 
+List     llCSV2List(ScriptRef, String s) {
+    SList splres;
+    boost::algorithm::split(splres, s, boost::algorithm::is_any_of(","));
+    return toList(splres);
+}
 
 }}}

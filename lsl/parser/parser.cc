@@ -241,6 +241,48 @@ bool check_for_constants(std::shared_ptr<Variable> & ast, AstPtr & target) {
         i->value = 0;
         return true;
     }
+    if(ast->name == "TYPE_INTEGER") {
+        auto i = create<Integer>(target);
+        clone_location(ast, i);
+        i->value = 1;
+        return true;
+    }
+    if(ast->name == "TYPE_FLOAT") {
+        auto i = create<Integer>(target);
+        clone_location(ast, i);
+        i->value = 2;
+        return true;
+    }
+    if(ast->name == "TYPE_STRING") {
+        auto i = create<Integer>(target);
+        clone_location(ast, i);
+        i->value = 3;
+        return true;
+    }
+    if(ast->name == "TYPE_KEY") {
+        auto i = create<Integer>(target);
+        clone_location(ast, i);
+        i->value = 4;
+        return true;
+    }
+    if(ast->name == "TYPE_VECTOR") {
+        auto i = create<Integer>(target);
+        clone_location(ast, i);
+        i->value = 5;
+        return true;
+    }
+    if(ast->name == "TYPE_ROTATION") {
+        auto i = create<Integer>(target);
+        clone_location(ast, i);
+        i->value = 6;
+        return true;
+    }
+    if(ast->name == "TYPE_INVALID") {
+        auto i = create<Integer>(target);
+        clone_location(ast, i);
+        i->value = 0;
+        return true;
+    }
     return false;
 }
 
@@ -339,8 +381,8 @@ bool list_constant(State & s, AstPtr & target) {
 }
 
 bool special_constant(State & s, AstPtr & target) {
-    return vector_constant(s, target)
-        || quaternion_constant(s, target)
+    return quaternion_constant(s, target)
+        || vector_constant(s, target)
         ;
 }
 
@@ -625,7 +667,6 @@ bool postfix_expr(State &s, AstPtr &target) {
         target = tmp;
     }
     else {
-        syntax_error(s, target, "Expected expression");
         return false;
     }
     return bool(target) && guard.commit();
@@ -1090,25 +1131,32 @@ bool statement(State & s, AstPtr & target) {
             return false;
         }
 
-        if(!forexpressionlist(s, for_->init)) {
-            return false;
+        if(!expect(s, TokenKind::SemiColon)) {
+            if(!forexpressionlist(s, for_->init)) {
+                syntax_error(s, for_->init, "Expected expression");
+                return false;
+            }
+
+            if(!expect(s, TokenKind::SemiColon)) {
+                syntax_error(s, for_, "Expected ';' after 'for' init");
+                return false;
+            }
         }
 
         if(!expect(s, TokenKind::SemiColon)) {
-            syntax_error(s, for_, "Expected ';' after 'for' init");
-            return false;
+            if(!expression(s, for_->condition)) {
+                syntax_error(s, for_->condition, "Expected expression");
+                return false;
+            }
+
+            if(!expect(s, TokenKind::SemiColon)) {
+                syntax_error(s, for_, "Expected ';' after 'for' condition");
+                return false;
+            }
         }
 
-        if(!expression(s, for_->condition)) {
-            return false;
-        }
-
-        if(!expect(s, TokenKind::SemiColon)) {
-            syntax_error(s, for_, "Expected ';' after 'for' condition");
-            return false;
-        }
-
-        if(!forexpressionlist(s, for_->step)) {
+        if(!forexpressionlist(s, for_->step) && !is(s, TokenKind::RightParen)) {
+            syntax_error(s, for_->step, "Expected expression");
             return false;
         }
 
@@ -1230,6 +1278,7 @@ bool compound_statement(State & s, std::vector<AstPtr> & stmts) {
         if(!statement(s, item)) {
             return false;
         }
+        expect(s, TokenKind::SemiColon);
         stmts.push_back(item);
     }
 

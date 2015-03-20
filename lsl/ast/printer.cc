@@ -347,11 +347,11 @@ void print_body(PrinterState & state, AstPtr const & e) {
 
 void print(PrinterState & state, For const & f) {
     printf("for(");
-    print(state, f.init);
+    if(f.init) print(state, f.init);
     printf("; ");
-    print(state, f.condition);
+    if(f.condition) print(state, f.condition);
     printf("; ");
-    print(state, f.step);
+    if(f.step) print(state, f.step);
     printf(") ");
     printf("\n");
 }

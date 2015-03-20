@@ -16,7 +16,8 @@ Float llCos(ScriptRef, Float);
 Float llTan(ScriptRef, Float);
 Float llAtan2(ScriptRef, Float);
 Float llSqrt(ScriptRef, Float);
-Float llPow(ScriptRef, Float);
+Float llPow(ScriptRef, Float, Float);
+Float   llLog(ScriptRef, Float);
 Integer llAbs(ScriptRef, Integer);
 Float llFabs(ScriptRef, Float);
 Integer llFloor(ScriptRef, Float);
@@ -38,6 +39,7 @@ Vector llRot2Up(ScriptRef, Rotation);
 
 Rotation llRotBetween(ScriptRef, Vector, Vector);
 
+
 // addFunction(10.f, 0.f, dummy_func, "llAxisAngle2Rot", "q", "vf");
 // addFunction(10.f, 0.f, dummy_func, "llRot2Axis", "v", "q");
 // addFunction(10.f, 0.f, dummy_func, "llRot2Angle", "f", "q");
@@ -49,6 +51,10 @@ Rotation llRotBetween(ScriptRef, Vector, Vector);
 // Misc
 Float llFrand(ScriptRef, Float);
 
+// URL
+String llEscapeURL(ScriptRef, String);
+String llUnescapeURL(ScriptRef, String);
+
 
 // String
 String llGetSubString(ScriptRef, String, Integer, Integer);
@@ -57,6 +63,7 @@ String llInsertString(ScriptRef, String, Integer, String);
 String llToUpper(ScriptRef, String);
 String llToLower(ScriptRef, String);
 Integer llSubStringIndex(ScriptRef, String, String);
+Integer llStringLength(ScriptRef, String);
 
 String llIntegerToBase64(ScriptRef, Integer);
 Integer llBase64ToInteger(ScriptRef, String);

@@ -15,6 +15,7 @@ Float llPow(ScriptRef, Float a, Float b)   { return pow(a, b); }
 Integer llAbs(ScriptRef, Integer a)        { return abs(a); }
 Float llFabs(ScriptRef, Float a)           { return fabs(a); }
 Integer llFloor(ScriptRef, Float a)        { return static_cast<Integer>(floor(a)); }
+Float   llLog(ScriptRef, Float a)          { return log(a); }
 Integer llCeil(ScriptRef, Float a)         { return static_cast<Integer>(ceil(a)); }
 Integer llRound(ScriptRef, Float a)        { return static_cast<Integer>(round(a)); }
 Float llAcos(ScriptRef, Float a)           { return acos(a); }

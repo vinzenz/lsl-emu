@@ -1413,11 +1413,14 @@ CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::Variable cons
             if(v.member == "x") {
                 member = &Quaternion::x;
             }
-            else if(v.member == "x") {
-                member = &Quaternion::x;
+            else if(v.member == "y") {
+                member = &Quaternion::y;
             }
-            else if(v.member == "x") {
-                member = &Quaternion::x;
+            else if(v.member == "z") {
+                member = &Quaternion::z;
+            }
+            else if(v.member == "s") {
+                member = &Quaternion::s;
             }
             else {
                 throw ScriptError(format("Unknown member '%s' for rotation", v.member.c_str()), v.line, v.column);
@@ -1452,6 +1455,7 @@ CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::Variable cons
             result.type = type;
             result.reference = true;
             if(local) {
+                scope.locals[name].reference = false;
                 result.value = boost::ref(scope.locals[name]);
             }
             else {
@@ -1520,9 +1524,12 @@ CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::UnaryOp const
         case AstUnaryOpType::Sub:
             impl = [target](Scope & scope) {
                 ScriptValue res;
-                res.type = ValueType::Integer;
+                res.type = target.result_type;
                 res.reference = false;
-                res.value = -target.compiled(scope).get().get_integer();
+                if(target.result_type == ValueType::Integer)
+                    res.value = -target.compiled(scope).get().get_integer();
+                else
+                    res.value = -target.compiled(scope).get().get_float();
                 return res;
             };
             break;
