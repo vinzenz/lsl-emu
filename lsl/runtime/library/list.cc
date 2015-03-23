@@ -23,15 +23,41 @@ namespace lib {
 
 bool CorrectIndex(size_t max, Integer & s, Integer & e);
 
+template< typename Sorter >
+bool list_sort(List::iterator a, List::iterator b) {
+    return Sorter()(*a, *b);
+}
 
 List llListSort(ScriptRef, List l, Integer stride, Integer ascending) {
-    printf("TODO: Not implemented - llListSort");
-    if(ascending) {
-        std::sort(l.begin(), l.end(), std::greater<ScriptValue>());
-    } else {
-        std::sort(l.begin(), l.end(), std::less<ScriptValue>());
+    if(l.empty() || (stride > 1 && (l.size() % static_cast<size_t>(stride)) != 0) ) {
+        // In SL: if the stride results in left over elements, the list does not get sorted at all!
+        return l;
     }
-    return l;
+
+    // We're performing the sort over the list of iterators, not over the list of values
+    std::vector<List::iterator> sv;
+    stride = stride == 0 ? 1 : std::abs(stride);
+    bool same = true;
+    for(size_t i = 0; i < l.size(); i += static_cast<size_t>(stride)){
+        if(i > 0)
+            same = same && sv.front()->type == l[i].type;
+        sv.push_back(l.begin() + i);
+    }
+
+    if(same) {
+        std::sort(sv.begin(), sv.end(), ascending ? list_sort<std::less<ScriptValue>> : list_sort<std::greater<ScriptValue>>);
+    } else if(!ascending) {
+        // SL just reverses mixed types, no need to do any sorting
+        std::reverse(sv.begin(), sv.end());
+    }
+
+    // Copy the sort result with respect for the stride
+    List r;
+    for(List::iterator it : sv) {
+        r.insert(r.end(), it, it + stride);
+    }
+
+    return r;
 }
 
 Integer  llGetListLength(ScriptRef, List l) {
@@ -125,12 +151,12 @@ String   llList2CSV(ScriptRef, List l) {
 }
 
 
-List     llListRandomize(ScriptRef, Integer stride) {
-
+List     llListRandomize(ScriptRef, List l, Integer stride) {
+    return l;
 }
 
-List     llList2ListStrided(ScriptRef, List, Integer, Integer, Integer) {
-
+List     llList2ListStrided(ScriptRef, List l, Integer, Integer, Integer) {
+    return l;
 }
 
 List     llListReplaceList(ScriptRef r, List source, List ins, Integer s, Integer e) {

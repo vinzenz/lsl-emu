@@ -173,6 +173,9 @@ struct less_visitor : boost::static_visitor < bool > {
 };
 
 bool operator<(ScriptValue const & left, ScriptValue const & right) {
+    if(left.type != right.type) {
+        return left.as_string() < right.as_string();
+    }
     return boost::apply_visitor(less_visitor(right.value), left.value);
 }
 
