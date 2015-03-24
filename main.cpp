@@ -113,7 +113,7 @@ int main(int argc, char const **argv)
     LOCAL_LSL(llOwnerSay, [](ScriptRef, String s) -> void {
         printf("llOwnerSay: %s\n", s.c_str());
     });
-    LOCAL_LSL(llOwnerSay, [](ScriptRef, String t, String s) -> void {
+    LOCAL_LSL(llInstantMessage, [](ScriptRef, String t, String s) -> void {
         printf("llInstantMessage(%s): %s\n", t.c_str(), s.c_str());
     });
     LOCAL_LSL(llResetScript, [](ScriptRef) -> void {
