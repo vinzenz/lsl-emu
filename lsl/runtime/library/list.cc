@@ -262,8 +262,6 @@ inline SList parse2list(String s, SList sep, SList spac, bool compact) {
         bool use_r1 = false;
         bool use_r2 = false;
         if(found(r1) && found(r2)) {
-            size_t p1 = std::get<0>(r1);
-            size_t p2 = std::get<0>(r2);
             if(std::get<0>(r1) <= std::get<0>(r2)) {
                 // r1 matches better
                 use_r1 = true;

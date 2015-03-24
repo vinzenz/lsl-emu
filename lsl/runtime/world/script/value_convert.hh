@@ -28,7 +28,7 @@ template class converter<Rotation>;
 template class converter<List>;
 
 template< typename T, typename U>
-T convert(T & a, U const & b) {
+T convert(T &, U const & b) {
     return converter<T>::from(b);
 }
 

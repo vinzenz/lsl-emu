@@ -23,7 +23,7 @@ namespace lsl {
     template< typename ForwardIterT >
     std::array<std::uint8_t, 16> to_md5(ForwardIterT start, ForwardIterT end) {
         std::array<std::uint8_t, 16> result;
-        MD5_CTX ctx = {};
+        MD5_CTX ctx;
         MD5Init(&ctx);
         for(;start != end; ++start) {
             auto element = static_cast<typename std::iterator_traits<ForwardIterT>::value_type>(*start);
