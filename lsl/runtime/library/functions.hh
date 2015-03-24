@@ -1,10 +1,12 @@
 #ifndef GUARD_LSL_RUNTIME_LIBRARY_FUNCTIONS_HH_INCLUDED
 #define GUARD_LSL_RUNTIME_LIBRARY_FUNCTIONS_HH_INCLUDED
 
+#include <type_traits>
+#include <functional>
 #include <boost/fusion/container.hpp>
 #include <boost/fusion/view/zip_view.hpp>
 #include <boost/fusion/algorithm/iteration/for_each.hpp>
-#include <boost/fusion/functional/invocation/invoke.hpp>
+#include <boost/fusion/functional/invocation/invoke_function_object.hpp>
 #include <lsl/runtime/types.hh>
 #include <lsl/runtime/world/script_fwd.hh>
 #include <lsl/runtime/world/script/eval.hh>
@@ -118,7 +120,7 @@ struct unpack_visitor {
 template<>
 struct wrapper<void> {
     template<typename... Args>
-    static script::CompiledScriptFunction apply(void (*f)(ScriptRef, Args...)) {
+    static script::CompiledScriptFunction apply(std::function<void(ScriptRef, Args...)> f) {
         return script::CompiledScriptFunction{
             ValueType::Void,
             { ScriptType2ValueType<Args>::value... },
@@ -126,7 +128,7 @@ struct wrapper<void> {
                 auto iter = call.arguments.begin();
                 auto args = boost::fusion::vector<Args...>();
                 boost::fusion::for_each(args, unpack_visitor(iter));
-                boost::fusion::invoke(f, boost::fusion::push_front(args, boost::cref(call.caller)));
+                boost::fusion::invoke_function_object(f, boost::fusion::push_front(args, boost::cref(call.caller)));
                 return script::CallResult();
             }
         };
@@ -136,7 +138,7 @@ struct wrapper<void> {
 template< typename R >
 struct wrapper {
     template<typename... Args>
-    static script::CompiledScriptFunction apply(R (*f)(ScriptRef, Args...)) {
+    static script::CompiledScriptFunction apply(std::function<R(ScriptRef, Args...)> f) {
         return script::CompiledScriptFunction{
             ScriptType2ValueType<R>::value,
             { ScriptType2ValueType<Args>::value... },
@@ -146,7 +148,7 @@ struct wrapper {
                 boost::fusion::for_each(args, unpack_visitor(iter));
                 return script::CallResult(
                             ScriptType2ValueType<R>::make(
-                                boost::fusion::invoke(
+                                boost::fusion::invoke_function_object(
                                     f,
                                     boost::fusion::push_front(args, boost::cref(call.caller)))));
             }
@@ -155,8 +157,31 @@ struct wrapper {
 };
 
 template< typename R, typename... Args>
-script::CompiledScriptFunction wrap(R (*f)(ScriptRef, Args...)) {
-    return wrapper<R>::template apply(f);
+script::CompiledScriptFunction wrap(std::function<R(Args...)> f) {
+    return wrapper<
+            R
+    >::template apply(f);
+}
+
+template<typename R, typename ...A>
+script::CompiledScriptFunction wrap(R f(A...)) {
+    return wrap(std::function<R(A...)>(f));
+}
+
+template<typename X, typename R, typename... Args>
+std::function<R(Args...)> deduce_result(R (X::*)(Args...)) {
+    return {};
+}
+
+template<typename X, typename R, typename... Args>
+std::function<R(Args...)> deduce_result(R (X::*)(Args...) const) {
+    return {};
+}
+
+template<typename F>
+script::CompiledScriptFunction wrap(F f) {
+    typedef decltype(deduce_result<F>(&F::operator())) fun_t;
+    return wrap(fun_t(f));
 }
 
 // Math

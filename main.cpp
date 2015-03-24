@@ -11,60 +11,6 @@
 #include <sqlite/transaction.hpp>
 #include <fstream>
 
-lsl::runtime::ScriptValue MakeList(lsl::runtime::List const & l) {
-    lsl::runtime::ScriptValue v;
-    v.value = l;
-    v.type = lsl::runtime::ValueType::List;
-    v.reference = false;
-    return v;
-}
-
-lsl::runtime::ScriptValue MakeString(std::string const & s) {
-    lsl::runtime::ScriptValue v;
-    v.type = lsl::runtime::ValueType::String;
-    v.value = s;
-    v.reference = false;
-    return v;
-}
-
-lsl::runtime::ScriptValue MakeKey(std::string const & k) {
-    lsl::runtime::ScriptValue v;
-    v.type = lsl::runtime::ValueType::Key;
-    v.value = k;
-    v.reference = false;
-    return v;
-}
-
-lsl::runtime::ScriptValue MakeInt(lsl::runtime::Integer const & i) {
-    lsl::runtime::ScriptValue v;
-    v.type = lsl::runtime::ValueType::Integer;
-    v.value = i;
-    v.reference = false;
-    return v;
-}
-
-lsl::runtime::ScriptValue MakeFloat(lsl::runtime::Float const & f) {
-    lsl::runtime::ScriptValue v;
-    v.type = lsl::runtime::ValueType::Float;
-    v.value = f;
-    v.reference = false;
-    return v;
-}
-lsl::runtime::ScriptValue MakeVector(lsl::runtime::Vector const & f) {
-    lsl::runtime::ScriptValue v;
-    v.type = lsl::runtime::ValueType::Vector;
-    v.value = f;
-    v.reference = false;
-    return v;
-}
-lsl::runtime::ScriptValue MakeRotation(lsl::runtime::Rotation const & f) {
-    lsl::runtime::ScriptValue v;
-    v.type = lsl::runtime::ValueType::Rotation;
-    v.value = f;
-    v.reference = false;
-    return v;
-}
-
 int main(int argc, char const **argv)
 {
     if(argc < 2) {
@@ -139,122 +85,74 @@ int main(int argc, char const **argv)
     using namespace lsl::runtime::script;
     using lsl::runtime::ValueType;
 
+#define LOCAL_LSL(NAME, DEF) \
+    get_script_library().functions[#NAME] = std::make_shared<ScriptFunction>(lsl::runtime::lib::wrap(DEF))
 
+    using lsl::runtime::Integer;
+    using lsl::runtime::List;
+    using lsl::runtime::Float;
+    using lsl::runtime::String;
+    using lsl::runtime::Vector;
+    using lsl::runtime::Rotation;
 
-    auto llSay = CompiledScriptFunction{
-        ValueType::Void,
-        {ValueType::Integer, ValueType::String},
-        [](ScriptFunctionCall const & args) -> CallResult {
-            printf("llSay: %s\n", args.arguments[1].as_string().c_str());
-            return CallResult();
-        }
-    };
-    auto llWhisper = CompiledScriptFunction{
-        ValueType::Void,
-        {ValueType::Integer, ValueType::String},
-        [](ScriptFunctionCall const & args) -> CallResult {
-            printf("llWhisper: %s\n", args.arguments[1].as_string().c_str());
-            return CallResult();
-        }
-    };
-    auto llOwnerSay = CompiledScriptFunction{
-        ValueType::Void,
-        {ValueType::String},
-        [](ScriptFunctionCall const & args) -> CallResult {
-            printf("llOwnerSay: %s\n", args.arguments[0].as_string().c_str());
-            return CallResult();
-        }
-    };
-    auto llInstantMessage = CompiledScriptFunction{
-        ValueType::Void,
-        {ValueType::Key, ValueType::String},
-        [](ScriptFunctionCall const & args) -> CallResult {
-            printf("llInstantMessage(%s): %s\n", args.arguments[0].as_string().c_str(), args.arguments[1].as_string().c_str());
-            return CallResult();
-        }
-    };
-    auto llResetScript = CompiledScriptFunction{
-        ValueType::Void,
-        {},
-        [](ScriptFunctionCall const &) -> CallResult {
-            printf("llResetScript();\n");
-            return CallResult();
-        }
-    };
-    auto llKey2Name = CompiledScriptFunction{
-        ValueType::String,
-        {ValueType::Key},
-        [](ScriptFunctionCall const & args) -> CallResult {
-            printf("llKey2Name(%s);\n", args.arguments[0].as_string().c_str());
-            return CallResult(MakeString("Avatar Name"));
-        }
-    };
+    LOCAL_LSL(llSay, [](ScriptRef, Integer, String s) -> void {
+        printf("llSay: %s\n", s.c_str());
+    });
+    LOCAL_LSL(llWhisper, [](ScriptRef, Integer, String s) -> void {
+        printf("llWhisper: %s\n", s.c_str());
+    });
+    LOCAL_LSL(llShout, [](ScriptRef, Integer, String s) -> void {
+        printf("llShout: %s\n", s.c_str());
+    });
+    LOCAL_LSL(llRegionSay, [](ScriptRef, Integer, String s) -> void {
+        printf("llRegionSay: %s\n", s.c_str());
+    });
+    LOCAL_LSL(llRegionSayTo, [](ScriptRef, String, Integer, String s) -> void {
+        printf("llRegionSayTo: %s\n", s.c_str());
+    });
+    LOCAL_LSL(llOwnerSay, [](ScriptRef, String s) -> void {
+        printf("llOwnerSay: %s\n", s.c_str());
+    });
+    LOCAL_LSL(llOwnerSay, [](ScriptRef, String t, String s) -> void {
+        printf("llInstantMessage(%s): %s\n", t.c_str(), s.c_str());
+    });
+    LOCAL_LSL(llResetScript, [](ScriptRef) -> void {
+        printf("llResetScript()\n");
+    });
+    LOCAL_LSL(llKey2Name, [](ScriptRef, String k) -> String {
+        printf("llKey2Name(%s);\n", k.c_str());
+        return "Avatar Name";
+    });
 #define SOMEGUID "BBDF9334-9A67-11E4-9C22-22F289BEA664"
-    auto llGetOwner = CompiledScriptFunction{
-        ValueType::Key,
-        {},
-        [](ScriptFunctionCall const &) -> CallResult {
-            printf("llGetOwner();\n");
-            return CallResult(MakeKey(SOMEGUID));
-        }
-    };
-    auto llGetInventoryCreator = CompiledScriptFunction{
-        ValueType::Key,
-        {ValueType::String},
-        [](ScriptFunctionCall const & args) -> CallResult {
-            printf("llGetInventoryCreator(%s);\n", args.arguments[0].as_string().c_str());
-            return CallResult(MakeKey(SOMEGUID));
-        }
-    };
-    auto llGetScriptName = CompiledScriptFunction{
-        ValueType::String,
-        {},
-        [](ScriptFunctionCall const & args) -> CallResult {
-            printf("llGetScriptName();\n");
-            return CallResult(MakeString(args.caller.get().name));
-        }
-    };
-
-    auto llHTTPRequest = CompiledScriptFunction{
-        ValueType::Key,
-        {ValueType::String, ValueType::List, ValueType::String},
-        [](ScriptFunctionCall const &) -> CallResult {
-            printf("llHTTPRequest();\n");
-            return CallResult(MakeKey(SOMEGUID));
-        }
-    };
-
-    auto llDetectedKey = CompiledScriptFunction{
-        ValueType::Key,
-        {ValueType::Integer},
-        [](ScriptFunctionCall const &) -> CallResult {
-            printf("llDetectedKey();\n");
-            return CallResult(MakeKey(SOMEGUID));
-        }
-    };
-
+    LOCAL_LSL(llGetOwner, [](ScriptRef) -> String {
+        printf("llGetOwner()\n");
+        return SOMEGUID;
+    });
+    LOCAL_LSL(llGetInventoryCreator, [](ScriptRef, String n) -> String {
+        printf("llGetInventoryCreator(%s);\n", n.c_str());
+        return SOMEGUID;
+    });
+    LOCAL_LSL(llGetScriptName, [](ScriptRef r) -> String{
+        return r.get().name;
+    });
+    LOCAL_LSL(llHTTPRequest, [](ScriptRef, String, List, String) -> String {
+        printf("llHTTPRequest();\n");
+        return SOMEGUID;
+    });
+    LOCAL_LSL(llDetectedKey,[](ScriptRef, Integer) -> String {
+        printf("llDetectedKey();\n");
+        return SOMEGUID;
+    });
 
     bool timerSet = false;
-    auto llSetTimerEvent = CompiledScriptFunction{
-        ValueType::Void,
-        {ValueType::Float},
-        [&timerSet](ScriptFunctionCall const & args) -> CallResult {
-            timerSet = args.arguments[0].as_float() != 0;
-            printf("llSetTimerEvent - > timer is now: %d\n", timerSet ? 1 : 0);
-            return CallResult({});
-        }
-    };
-
-    auto llSetText = CompiledScriptFunction{
-        ValueType::Void,
-        {ValueType::String, ValueType::Vector, ValueType::Float},
-        [](ScriptFunctionCall const & args) -> CallResult {
-            std::ofstream ofs("text.out");
-            ofs << args.arguments[1].as_string() + args.arguments[0].as_string();
-            return CallResult({});
-        }
-    };
-
+    LOCAL_LSL(llSetTimerEvent, [&timerSet](ScriptRef, Float f) -> void {
+        timerSet = f != 0;
+        printf("llSetTimerEvent - > timer is now: %d\n", timerSet ? 1 : 0);
+    });
+    LOCAL_LSL(llSetText, [](ScriptRef, String s, Vector v, Float) -> void {
+        std::ofstream ofs("text.out");
+        ofs << lsl::runtime::to_string(v) + s;
+    });
 
     sqlite::connection con("results.db");
     sqlite::execute(con, "CREATE TABLE IF NOT EXISTS poker_result (result INTEGER NOT NULL );", true);
@@ -275,19 +173,6 @@ int main(int argc, char const **argv)
         }
     };
 
-    get_script_library().functions["llSay"] = std::make_shared<ScriptFunction>(llSay);
-    get_script_library().functions["llWhisper"] = std::make_shared<ScriptFunction>(llWhisper);
-    get_script_library().functions["llOwnerSay"] = std::make_shared<ScriptFunction>(llOwnerSay);
-    get_script_library().functions["llInstantMessage"] = std::make_shared<ScriptFunction>(llInstantMessage);
-    get_script_library().functions["llHTTPRequest"] = std::make_shared<ScriptFunction>(llHTTPRequest);
-    get_script_library().functions["llResetScript"] = std::make_shared<ScriptFunction>(llResetScript);
-    get_script_library().functions["llDetectedKey"] = std::make_shared<ScriptFunction>(llDetectedKey);
-    get_script_library().functions["llKey2Name"] = std::make_shared<ScriptFunction>(llKey2Name);
-    get_script_library().functions["llGetOwner"] = std::make_shared<ScriptFunction>(llGetOwner);
-    get_script_library().functions["llGetInventoryCreator"] = std::make_shared<ScriptFunction>(llGetInventoryCreator);
-    get_script_library().functions["llGetScriptName"] = std::make_shared<ScriptFunction>(llGetScriptName);
-    get_script_library().functions["llSetTimerEvent"] = std::make_shared<ScriptFunction>(llSetTimerEvent);
-    get_script_library().functions["llSetText"] = std::make_shared<ScriptFunction>(llSetText);
     get_script_library().functions["sqlInsert"] = std::make_shared<ScriptFunction>(sqlInsert);
 
     #define LSL_LIB_WRAP(LSL_FUN_NAME) \
