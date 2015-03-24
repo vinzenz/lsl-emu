@@ -20,86 +20,27 @@ using script::ScriptRef;
 template< typename T >
 struct ScriptType2ValueType;
 
-template<>
-struct ScriptType2ValueType<Float> {
-    static constexpr ValueType const value = ValueType::Float;
-    template< typename Iter >
-    static Float get_value(Iter & iter) {
-        Float f = iter->as_float();
-        ++iter;
-        return f;
+#define IMPL_SCRIPTTYPE_MAPPER(NAME, AS_NAME) \
+    template<> \
+    struct ScriptType2ValueType<NAME> { \
+        static constexpr ValueType const value = ValueType:: NAME; \
+        template< typename Iter > \
+        static NAME get_value(Iter & iter) { \
+            NAME v = iter-> AS_NAME (); \
+            ++iter; \
+            return v; \
+        } \
+        static ScriptValue make(NAME f) { \
+            return ScriptValue(value, f, false); \
+        } \
     }
 
-    static ScriptValue make(Float f) {
-        return ScriptValue(value, f, false);
-    }
-};
-template<>
-struct ScriptType2ValueType<Integer> {
-    static constexpr ValueType const value = ValueType::Integer;
-    template< typename Iter >
-    static Integer get_value(Iter & iter) {
-        Integer i = iter->as_integer();
-        ++iter;
-        return i;
-    }
-
-    static ScriptValue make(Integer i) {
-        return ScriptValue(value, i, false);
-    }
-};
-template<>
-struct ScriptType2ValueType<Vector> {
-    static constexpr ValueType const value = ValueType::Vector;
-    template< typename Iter >
-    static Vector get_value(Iter & iter) {
-        Vector v = iter->as_vector();
-        ++iter;
-        return v;
-    }
-    static ScriptValue make(Vector v) {
-        return ScriptValue(value, v, false);
-    }
-};
-template<>
-struct ScriptType2ValueType<String> {
-    static constexpr ValueType const value = ValueType::String;
-    template< typename Iter >
-    static String get_value(Iter & iter) {
-        String s = iter->as_string();
-        ++iter;
-        return s;
-    }
-    static ScriptValue make(String s) {
-        return ScriptValue(value, s, false);
-    }
-};
-template<>
-struct ScriptType2ValueType<List> {
-    static constexpr ValueType const value = ValueType::List;
-    template< typename Iter >
-    static List get_value(Iter & iter) {
-        List l = iter->as_list();
-        ++iter;
-        return l;
-    }
-    static ScriptValue make(List l) {
-        return ScriptValue(value, l, false);
-    }
-};
-template<>
-struct ScriptType2ValueType<Rotation> {
-    static constexpr ValueType const value = ValueType::Rotation;
-    template< typename Iter >
-    static Rotation get_value(Iter & iter) {
-        Rotation r = iter->as_vector();
-        ++iter;
-        return r;
-    }
-    static ScriptValue make(Rotation r) {
-        return ScriptValue(value, r, false);
-    }
-};
+IMPL_SCRIPTTYPE_MAPPER(Float, as_float);
+IMPL_SCRIPTTYPE_MAPPER(Integer, as_integer);
+IMPL_SCRIPTTYPE_MAPPER(Vector, as_vector);
+IMPL_SCRIPTTYPE_MAPPER(String, as_string);
+IMPL_SCRIPTTYPE_MAPPER(List, as_list);
+IMPL_SCRIPTTYPE_MAPPER(Rotation, as_rotation);
 
 template< typename R >
 struct wrapper;
@@ -110,12 +51,29 @@ struct unpack_visitor {
     : iter_(iter){}
     iterator & iter_;
 
+    // Minimal optimization for lists
+    void operator()(List & l) {
+        ScriptType2ValueType<List>::get_value(iter_).swap(l);
+    }
+
     template< typename T >
     void operator()(T & v) const {
         v = ScriptType2ValueType<T>::get_value(iter_);
     }
 };
 
+template< typename R, typename F, typename... Args>
+R do_invoke(script::ScriptFunctionCall const & call, F f) {
+    auto iter = call.arguments.begin();
+    // Parameter storage
+    auto p = boost::fusion::vector<Args...>();
+    // Extracts the parameters from the iterator poiting to call.arguments
+    boost::fusion::for_each(p, unpack_visitor(iter));
+    // Prepends the ScriptRef as first parameter and invokes the function
+    return boost::fusion::invoke_function_object(
+                f,
+                boost::fusion::push_front(p, boost::cref(call.caller)));
+}
 
 template<>
 struct wrapper<void> {
@@ -125,10 +83,7 @@ struct wrapper<void> {
             ValueType::Void,
             { ScriptType2ValueType<Args>::value... },
             [f](script::ScriptFunctionCall const & call) -> script::CallResult {
-                auto iter = call.arguments.begin();
-                auto args = boost::fusion::vector<Args...>();
-                boost::fusion::for_each(args, unpack_visitor(iter));
-                boost::fusion::invoke_function_object(f, boost::fusion::push_front(args, boost::cref(call.caller)));
+                do_invoke<void, decltype(f), Args...>(call, f);
                 return script::CallResult();
             }
         };
@@ -143,14 +98,7 @@ struct wrapper {
             ScriptType2ValueType<R>::value,
             { ScriptType2ValueType<Args>::value... },
             [f](script::ScriptFunctionCall const & call) -> script::CallResult {
-                auto iter = call.arguments.begin();
-                auto args = boost::fusion::vector<Args...>();
-                boost::fusion::for_each(args, unpack_visitor(iter));
-                return script::CallResult(
-                            ScriptType2ValueType<R>::make(
-                                boost::fusion::invoke_function_object(
-                                    f,
-                                    boost::fusion::push_front(args, boost::cref(call.caller)))));
+                return script::CallResult(ScriptType2ValueType<R>::make(do_invoke<R, decltype(f), Args...>(call, f)));
             }
         };
     }
