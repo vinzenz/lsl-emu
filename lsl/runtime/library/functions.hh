@@ -1,14 +1,163 @@
 #ifndef GUARD_LSL_RUNTIME_LIBRARY_FUNCTIONS_HH_INCLUDED
 #define GUARD_LSL_RUNTIME_LIBRARY_FUNCTIONS_HH_INCLUDED
 
+#include <boost/fusion/container.hpp>
+#include <boost/fusion/view/zip_view.hpp>
+#include <boost/fusion/algorithm/iteration/for_each.hpp>
+#include <boost/fusion/functional/invocation/invoke.hpp>
 #include <lsl/runtime/types.hh>
 #include <lsl/runtime/world/script_fwd.hh>
+#include <lsl/runtime/world/script/eval.hh>
 
 namespace lsl {
 namespace runtime {
 namespace lib {
 
 using script::ScriptRef;
+
+template< typename T >
+struct ScriptType2ValueType;
+
+template<>
+struct ScriptType2ValueType<Float> {
+    static constexpr ValueType const value = ValueType::Float;
+    template< typename Iter >
+    static Float get_value(Iter & iter) {
+        Float f = iter->as_float();
+        ++iter;
+        return f;
+    }
+
+    static ScriptValue make(Float f) {
+        return ScriptValue(value, f, false);
+    }
+};
+template<>
+struct ScriptType2ValueType<Integer> {
+    static constexpr ValueType const value = ValueType::Integer;
+    template< typename Iter >
+    static Integer get_value(Iter & iter) {
+        Integer i = iter->as_integer();
+        ++iter;
+        return i;
+    }
+
+    static ScriptValue make(Integer i) {
+        return ScriptValue(value, i, false);
+    }
+};
+template<>
+struct ScriptType2ValueType<Vector> {
+    static constexpr ValueType const value = ValueType::Vector;
+    template< typename Iter >
+    static Vector get_value(Iter & iter) {
+        Vector v = iter->as_vector();
+        ++iter;
+        return v;
+    }
+    static ScriptValue make(Vector v) {
+        return ScriptValue(value, v, false);
+    }
+};
+template<>
+struct ScriptType2ValueType<String> {
+    static constexpr ValueType const value = ValueType::String;
+    template< typename Iter >
+    static String get_value(Iter & iter) {
+        String s = iter->as_string();
+        ++iter;
+        return s;
+    }
+    static ScriptValue make(String s) {
+        return ScriptValue(value, s, false);
+    }
+};
+template<>
+struct ScriptType2ValueType<List> {
+    static constexpr ValueType const value = ValueType::List;
+    template< typename Iter >
+    static List get_value(Iter & iter) {
+        List l = iter->as_list();
+        ++iter;
+        return l;
+    }
+    static ScriptValue make(List l) {
+        return ScriptValue(value, l, false);
+    }
+};
+template<>
+struct ScriptType2ValueType<Rotation> {
+    static constexpr ValueType const value = ValueType::Rotation;
+    template< typename Iter >
+    static Rotation get_value(Iter & iter) {
+        Rotation r = iter->as_vector();
+        ++iter;
+        return r;
+    }
+    static ScriptValue make(Rotation r) {
+        return ScriptValue(value, r, false);
+    }
+};
+
+template< typename R >
+struct wrapper;
+
+struct unpack_visitor {
+    typedef ScriptValue::list_type::const_iterator iterator;
+    unpack_visitor(iterator & iter)
+    : iter_(iter){}
+    iterator & iter_;
+
+    template< typename T >
+    void operator()(T & v) const {
+        v = ScriptType2ValueType<T>::get_value(iter_);
+    }
+};
+
+
+template<>
+struct wrapper<void> {
+    template<typename... Args>
+    static script::CompiledScriptFunction apply(void (*f)(ScriptRef, Args...)) {
+        return script::CompiledScriptFunction{
+            ValueType::Void,
+            { ScriptType2ValueType<Args>::value... },
+            [f](script::ScriptFunctionCall const & call) -> script::CallResult {
+                auto iter = call.arguments.begin();
+                auto args = boost::fusion::vector<Args...>();
+                boost::fusion::for_each(args, unpack_visitor(iter));
+                boost::fusion::invoke(f, boost::fusion::push_front(args, boost::cref(call.caller)));
+                return script::CallResult();
+            }
+        };
+    }
+};
+
+template< typename R >
+struct wrapper {
+    template<typename... Args>
+    static script::CompiledScriptFunction apply(R (*f)(ScriptRef, Args...)) {
+        return script::CompiledScriptFunction{
+            ScriptType2ValueType<R>::value,
+            { ScriptType2ValueType<Args>::value... },
+            [f](script::ScriptFunctionCall const & call) -> script::CallResult {
+                auto iter = call.arguments.begin();
+                auto args = boost::fusion::vector<Args...>();
+                boost::fusion::for_each(args, unpack_visitor(iter));
+                return script::CallResult(
+                            ScriptType2ValueType<R>::make(
+                                boost::fusion::invoke(
+                                    f,
+                                    boost::fusion::push_front(args, boost::cref(call.caller)))));
+            }
+        };
+    }
+};
+
+template< typename R, typename... Args>
+script::CompiledScriptFunction wrap(R (*f)(ScriptRef, Args...)) {
+    return wrapper<R>::template apply(f);
+}
 
 // Math
 Float llSin(ScriptRef, Float);

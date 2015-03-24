@@ -8,6 +8,7 @@
 #include <boost/archive/iterators/base64_from_binary.hpp>
 #include <boost/archive/iterators/binary_from_base64.hpp>
 #include <boost/archive/iterators/transform_width.hpp>
+#include <boost/range/adaptor/strided.hpp>
 #include <boost/uuid/sha1.hpp>
 #include <lsl/utils.hh>
 #include <cmath>
@@ -152,10 +153,39 @@ String   llList2CSV(ScriptRef, List l) {
 
 
 List     llListRandomize(ScriptRef, List l, Integer stride) {
-    return l;
+    if(l.empty() || (stride > 1 && (l.size() % static_cast<size_t>(stride)) != 0) ) {
+        // In SL: if the stride results in left over elements, the list does not get sorted at all!
+        return l;
+    }
+
+    // We're performing the sort over the list of iterators, not over the list of values
+    std::vector<List::iterator> sv;
+    stride = stride == 0 ? 1 : std::abs(stride);
+    bool same = true;
+    for(size_t i = 0; i < l.size(); i += static_cast<size_t>(stride)){
+        if(i > 0)
+            same = same && sv.front()->type == l[i].type;
+        sv.push_back(l.begin() + i);
+    }
+
+    std::random_device device;
+    std::uniform_int_distribution<std::ptrdiff_t> distr;
+    std::random_shuffle(sv.begin(), sv.end(), [&distr, &device](std::ptrdiff_t diff) -> std::ptrdiff_t { return distr(device) % diff; });
+
+    // Copy the sort result with respect for the stride
+    List r;
+    for(List::iterator it : sv) {
+        r.insert(r.end(), it, it + stride);
+    }
+
+    return r;
 }
 
-List     llList2ListStrided(ScriptRef, List l, Integer, Integer, Integer) {
+List     llList2ListStrided(ScriptRef, List l, Integer i, Integer e, Integer stride) {
+    if(CorrectIndex(l.size(), i, e)) {
+        auto strided = boost::adaptors::stride(l, stride);
+        return List(strided.begin(), strided.begin() + e / stride);
+    }
     return l;
 }
 

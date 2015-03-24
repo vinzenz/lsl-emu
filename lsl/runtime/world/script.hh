@@ -27,6 +27,7 @@ struct Script {
     std::unordered_map<String, StatePtr>            states;
     String                                          current_state;
     String                                          prim_key;
+    String                                          name;
     Library                                         library;
     typedef std::tuple<std::string, ScriptValue::list_type> event_item_type;
     std::deque<event_item_type>                     pending_events;
@@ -37,7 +38,9 @@ struct Script {
     , states()
     , current_state("default")
     , prim_key(prim_key)
+    , name("CurrentScript")
     , library(get_script_library())
+    , pending_events()
     {
 
     }
