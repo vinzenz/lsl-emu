@@ -1752,7 +1752,7 @@ CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::Ast const & a
     case AstType::Call: return eval_expr(script, scope, static_cast<Call const &>(a)); break;
     case AstType::Quaternion: return eval_expr(script, scope, static_cast<lsl::Quaternion const &>(a)); break;
     case AstType::Key: return eval_expr(script, scope, static_cast<lsl::Key const &>(a)); break;
-    case AstType::String: return eval_expr(script, scope, static_cast<StringLit const &>(a)); break;
+    case AstType::StringLit: return eval_expr(script, scope, static_cast<StringLit const &>(a)); break;
     case AstType::Integer: return eval_expr(script, scope, static_cast<lsl::Integer const &>(a)); break;
     case AstType::Float: return eval_expr(script, scope, static_cast<lsl::Float const &>(a)); break;
     case AstType::Variable: return eval_expr(script, scope, static_cast<lsl::Variable const &>(a)); break;

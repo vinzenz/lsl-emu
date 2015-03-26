@@ -20,7 +20,7 @@ std::vector<VarDecl> get_global_variables(Script const & s) {
 }
 
 std::vector<StateDef> get_states(Script const & s) {
-    return get_global<StateDef, AstType::State>(s.states.states);
+    return get_global<StateDef, AstType::StateDef>(s.states.states);
 }
 
 std::vector<Event> get_events(StateDef const & s) {

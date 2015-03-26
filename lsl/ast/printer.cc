@@ -19,7 +19,7 @@ void print(PrinterState & state, Ast const & a) {
     case AstType::Call: print(state, static_cast<Call const &>(a)); break;
     case AstType::Quaternion: print(state, static_cast<Quaternion const &>(a)); break;
     case AstType::Key: print(state, static_cast<Key const &>(a)); break;
-    case AstType::String: print(state, static_cast<StringLit const &>(a)); break;
+    case AstType::StringLit: print(state, static_cast<StringLit const &>(a)); break;
     case AstType::Integer: print(state, static_cast<Integer const &>(a)); break;
     case AstType::Float: print(state, static_cast<Float const &>(a)); break;
     case AstType::Variable: print(state, static_cast<Variable const &>(a)); break;
@@ -39,7 +39,7 @@ void print(PrinterState & state, Ast const & a) {
     case AstType::If: print(state, static_cast<If const &>(a)); break;
     case AstType::Function: print(state, static_cast<Function const &>(a)); break;
     case AstType::Event: print(state, static_cast<Event const &>(a)); break;
-    case AstType::State: print(state, static_cast<StateDef const &>(a)); break;
+    case AstType::StateDef: print(state, static_cast<StateDef const &>(a)); break;
     case AstType::States: print(state, static_cast<States const &>(a)); break;
     case AstType::Globals: print(state, static_cast<Globals const &>(a)); break;
     case AstType::Script: print(state, static_cast<Script const &>(a)); break;
