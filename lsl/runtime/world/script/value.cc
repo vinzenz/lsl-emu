@@ -92,6 +92,27 @@ ScriptValue::list_type ScriptValue::as_list() const {
     return boost::apply_visitor(value_visitor<list_type>(), value);
 }
 
+ScriptValue::integer_type ScriptValue::as_bool() const {
+    switch(type) {
+    case ValueType::String:
+        return as_string().empty() ? 0 : 1;
+    case ValueType::Key:
+        return as_string().empty() ? 0 : as_string() == "00000000-0000-0000-0000-000000000000" ? 0 : 1;
+    case ValueType::Rotation:
+        return as_rotation() != Quaternion{0., 0., 0., 1.};
+    case ValueType::Vector:
+        return !(as_vector() == Vector{0., 0., 0.});
+    case ValueType::Integer:
+    case ValueType::Float:
+        return (as_integer() != 0 ? 1 : 0);
+    case ValueType::List:
+        return as_list().empty() ? 0 : 1;
+    default:
+        break;
+    }
+    return 0;
+}
+
 ScriptValue::rotation_type & ScriptValue::get_rotation() {
     return boost::apply_visitor(reference_visitor<ScriptValue::rotation_type>(), value);
 }

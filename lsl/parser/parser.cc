@@ -303,6 +303,11 @@ bool lvalue(State &s, AstPtr &target) {
 }
 
 
+decltype(Integer::value) string_to_int(String const & s) {
+    boost::multiprecision::cpp_int integ(s);
+    return static_cast<decltype(Integer::value)>(integ);
+}
+
 bool integer_constant(State & s, AstPtr & target) {
     StateGuard guard(s, target);
     auto ast = create<Integer>(target);
@@ -319,8 +324,7 @@ bool integer_constant(State & s, AstPtr & target) {
 
     if(is(s, TokenKind::Number)) {
         try {
-            boost::multiprecision::cpp_int integ(value);
-            ast->value = static_cast<decltype(ast->value)>(integ);
+            ast->value = string_to_int(value);
         }
         catch(std::runtime_error const &) {
             return false;

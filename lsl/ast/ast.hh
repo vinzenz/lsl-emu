@@ -5,9 +5,10 @@
 #include <lsl/types.hh>
 #include <vector>
 #include <memory>
+#include <lsl/runtime/types.hh>
+#include <boost/optional/optional.hpp>
 
 namespace lsl {
-
 
 template< typename T, typename U>
 std::shared_ptr<T> ast_cast(std::shared_ptr<U> u) {
@@ -137,6 +138,12 @@ bool all_constant(Container const & c) {
     return true;
 }
 
+namespace runtime {
+    class ScriptValue;
+    typedef boost::optional<ScriptValue> OptionalScriptValue;
+}
+
+
 struct Ast {
     Ast() : type(), line(), column() {}
     virtual ~Ast(){}
@@ -145,6 +152,7 @@ struct Ast {
     virtual void VisitChildren(AstVisitor *) = 0;
     virtual char const * PrettyName() const = 0;
     virtual bool IsConstant() const { return false; }
+    virtual runtime::OptionalScriptValue  EvalConstExpr() const { return {}; }
 
 #define DEFINE_COMMON_ABSTRACT(BaseName)   \
     virtual bool Is##BaseName() const { return false; } \
@@ -239,6 +247,21 @@ struct Vector : AstT<AstType::Vector> {
     AstPtr y;
     AstPtr z;
 
+    virtual runtime::OptionalScriptValue  EvalConstExpr() const {
+        if(x && y && z && IsConstant()) {
+            return runtime::ScriptValue{
+                runtime::ValueType::Vector,
+                runtime::Vector{
+                    x->EvalConstExpr().get().as_float(),
+                    y->EvalConstExpr().get().as_float(),
+                    z->EvalConstExpr().get().as_float()
+                },
+                false
+            };
+        }
+        return {};
+    }
+
     virtual bool IsConstant() const {
         return x->IsConstant()
             && y->IsConstant()
@@ -278,6 +301,22 @@ struct Quaternion : AstT<AstType::Quaternion> {
     AstPtr z;
     AstPtr s;
 
+    virtual runtime::OptionalScriptValue  EvalConstExpr() const {
+        if(x && y && z && IsConstant()) {
+            return runtime::ScriptValue{
+                runtime::ValueType::Rotation,
+                runtime::Rotation{
+                    x->EvalConstExpr().get().as_float(),
+                    y->EvalConstExpr().get().as_float(),
+                    z->EvalConstExpr().get().as_float(),
+                    s->EvalConstExpr().get().as_float()
+                },
+                false
+            };
+        }
+        return {};
+    }
+
     virtual bool IsConstant() const {
         return x->IsConstant()
             && y->IsConstant()
@@ -299,6 +338,15 @@ struct Quaternion : AstT<AstType::Quaternion> {
 
 struct Key : AstT<AstType::Key> {
     String value;
+
+    virtual runtime::OptionalScriptValue  EvalConstExpr() const {
+        return runtime::ScriptValue{
+            runtime::ValueType::Key,
+            value,
+            false
+        };
+    }
+
     virtual bool IsConstant() const { return true; }
     virtual void Visit(AstVisitor * v){
         v->VisitKey(this);
@@ -307,6 +355,13 @@ struct Key : AstT<AstType::Key> {
 
 struct StringLit : AstT<AstType::StringLit> {
     String value;
+    virtual runtime::OptionalScriptValue  EvalConstExpr() const {
+        return runtime::ScriptValue{
+            runtime::ValueType::Key,
+            value,
+            false
+        };
+    }
     virtual bool IsConstant() const { return true; }
     virtual void Visit(AstVisitor * v){
         v->VisitStringLit(this);
@@ -315,6 +370,13 @@ struct StringLit : AstT<AstType::StringLit> {
 
 struct Integer : AstT<AstType::Integer> {
     int32_t value;
+    virtual runtime::OptionalScriptValue  EvalConstExpr() const {
+        return runtime::ScriptValue{
+            runtime::ValueType::Integer,
+            value,
+            false
+        };
+    }
     virtual bool IsConstant() const { return true; }
     virtual void Visit(AstVisitor * v){
         v->VisitInteger(this);
@@ -323,6 +385,13 @@ struct Integer : AstT<AstType::Integer> {
 
 struct Float : AstT<AstType::Float> {
     double value;
+    virtual runtime::OptionalScriptValue  EvalConstExpr() const {
+        return runtime::ScriptValue{
+            runtime::ValueType::Float,
+            value,
+            false
+        };
+    }
     virtual bool IsConstant() const { return true; }
     virtual void Visit(AstVisitor * v){
         v->VisitFloat(this);
@@ -340,6 +409,22 @@ struct Variable : AstT<AstType::Variable> {
 
 struct List : AstT<AstType::List> {
     std::vector<AstPtr> elements;
+
+    virtual runtime::OptionalScriptValue  EvalConstExpr() const {
+        if(!IsConstant()) {
+            return {};
+        }
+        auto lst = runtime::List();
+        lst.reserve(elements.size());
+        for(auto const & e : elements) {
+            lst.push_back(e->EvalConstExpr().get());
+        }
+        return runtime::ScriptValue{
+            runtime::ValueType::Integer,
+            lst,
+            false
+        };
+    }
 
     virtual bool IsConstant() const { return all_constant(elements); }
     virtual void Visit(AstVisitor * v){
@@ -368,6 +453,17 @@ struct BoolOp : AstT<AstType::BoolOp> {
     AstPtr left;
     AstPtr right;
     AstBoolOpType op;
+
+    virtual runtime::OptionalScriptValue  EvalConstExpr() const {
+        runtime::Integer result = (op == AstBoolOpType::And
+            ? left->EvalConstExpr().get().as_bool() && right->EvalConstExpr().get().as_bool()
+            : left->EvalConstExpr().get().as_bool() || right->EvalConstExpr().get().as_bool());
+        return runtime::ScriptValue{
+            runtime::ValueType::Integer,
+            result,
+            false
+        };
+    }
 
     virtual bool IsConstant() const {
         return left->IsConstant() && right->IsConstant();
@@ -399,6 +495,59 @@ struct UnaryOp : AstT<AstType::UnaryOp> {
 struct TypeCast : AstT<AstType::TypeCast> {
     String target_type;
     AstPtr right;
+
+    virtual runtime::OptionalScriptValue  EvalConstExpr() const {
+        if(target_type == "string") {
+            return runtime::ScriptValue{
+                runtime::ValueType::String,
+                right->EvalConstExpr().get().as_string(),
+                false
+            };
+        }
+        if(target_type == "key") {
+            return runtime::ScriptValue{
+                runtime::ValueType::Key,
+                right->EvalConstExpr().get().as_string(),
+                false
+            };
+        }
+        if(target_type == "integer") {
+            return runtime::ScriptValue{
+                runtime::ValueType::Integer,
+                right->EvalConstExpr().get().as_integer(),
+                false
+            };
+        }
+        if(target_type == "float") {
+            return runtime::ScriptValue{
+                runtime::ValueType::Integer,
+                right->EvalConstExpr().get().as_float(),
+                false
+            };
+        }
+        if(target_type == "vector") {
+            return runtime::ScriptValue{
+                runtime::ValueType::Integer,
+                right->EvalConstExpr().get().as_vector(),
+                false
+            };
+        }
+        if(target_type == "rotation") {
+            return runtime::ScriptValue{
+                runtime::ValueType::Integer,
+                right->EvalConstExpr().get().as_rotation(),
+                false
+            };
+        }
+        if(target_type == "list") {
+            return runtime::ScriptValue{
+                runtime::ValueType::Integer,
+                right->EvalConstExpr().get().as_list(),
+                false
+            };
+        }
+        return {};
+    }
 
     virtual bool IsConstant() const {
         return right->IsConstant();
@@ -646,6 +795,7 @@ struct Return : AstT<AstType::Return> {
         if(value) value->Visit(v);
     }
 };
+
 
 }
 #endif //GUARD_LSL_AST_AST_HH_INCLUDED

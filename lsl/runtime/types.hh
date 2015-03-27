@@ -103,6 +103,8 @@ struct ScriptValue {
     rotation_type   as_rotation() const;
     list_type       as_list() const;
 
+    integer_type    as_bool() const;
+
     rotation_type & get_rotation();
     vector_type & get_vector();
     string_type & get_string();

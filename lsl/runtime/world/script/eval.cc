@@ -134,26 +134,8 @@ bool valid_key(String const & key) {
     return true;
 }
 
-bool as_condition(ScriptValue & value) {
-    switch(value.type) {
-    case ValueType::Float:
-    case ValueType::Integer:
-    return value.as_integer() != 0;
-    case ValueType::String:
-    return !value.get_string().empty();
-    case ValueType::List:
-    return !value.get_list().empty();
-    case ValueType::Key:
-    return value.get_string() != "00000000-0000-0000-0000-000000000000";
-    case ValueType::Rotation:
-    return value.get_rotation() != Quaternion{0., 0., 0., 1.};
-    case ValueType::Vector:
-    return !(value.get_vector() == Vector{0., 0., 0.});
-    default:
-    assert(false && "Type?");
-    break;
-    }
-    return false;
+bool as_condition(ScriptValue const & value) {
+    return value.as_bool() != 0;
 }
 
 CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::Call const & v) {
