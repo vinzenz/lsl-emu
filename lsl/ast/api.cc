@@ -28,7 +28,7 @@ std::vector<Event> get_events(StateDef const & s) {
 }
 
 std::vector<Function> get_functions(Script const & s) {
-    return get_global<Function, AstType::Function>(s.globals.globals);
+    return get_global<Function, AstType::Function>(s.globals.functions);
 }
 
 }

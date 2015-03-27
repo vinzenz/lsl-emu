@@ -143,16 +143,20 @@ namespace runtime {
     typedef boost::optional<ScriptValue> OptionalScriptValue;
 }
 
-
+struct Ast;
+typedef std::shared_ptr<Ast> AstPtr;
 struct Ast {
     Ast() : type(), line(), column() {}
     virtual ~Ast(){}
 
+    virtual AstPtr ApplyUnaryOp(AstUnaryOpType) const { return AstPtr(); }
     virtual void Visit(AstVisitor *) = 0;
     virtual void VisitChildren(AstVisitor *) = 0;
     virtual char const * PrettyName() const = 0;
     virtual bool IsConstant() const { return false; }
     virtual runtime::OptionalScriptValue  EvalConstExpr() const { return {}; }
+
+    virtual bool IsLiteral() const { return false; }
 
 #define DEFINE_COMMON_ABSTRACT(BaseName)   \
     virtual bool Is##BaseName() const { return false; } \
@@ -165,7 +169,6 @@ struct Ast {
     uint32_t line;
     uint32_t column;
 };
-typedef std::shared_ptr<Ast> AstPtr;
 
 template< AstType, AstType >
 struct ast_cast_;
@@ -215,6 +218,11 @@ struct ExpressionList : AstT<AstType::ExpressionList> {
     }
 };
 
+template< AstType Type >
+struct Literal : AstT<Type> {
+    virtual bool IsLiteral() const { return true; }
+};
+
 struct Jump : AstT<AstType::Jump> {
     String label;
     virtual void Visit(AstVisitor * v){
@@ -246,6 +254,13 @@ struct Vector : AstT<AstType::Vector> {
     AstPtr x;
     AstPtr y;
     AstPtr z;
+
+    virtual bool IsLiteral() const {
+        return x && y && z
+            && x->IsLiteral()
+            && y->IsLiteral()
+            && z->IsLiteral();
+    }
 
     virtual runtime::OptionalScriptValue  EvalConstExpr() const {
         if(x && y && z && IsConstant()) {
@@ -295,11 +310,19 @@ struct Call : AstT<AstType::Call> {
     }
 };
 
-struct Quaternion : AstT<AstType::Quaternion> {
+struct Quaternion : Literal<AstType::Quaternion> {
     AstPtr x;
     AstPtr y;
     AstPtr z;
     AstPtr s;
+
+    virtual bool IsLiteral() const {
+        return x && y && z && s
+            && x->IsLiteral()
+            && y->IsLiteral()
+            && z->IsLiteral()
+            && s->IsLiteral();
+    }
 
     virtual runtime::OptionalScriptValue  EvalConstExpr() const {
         if(x && y && z && IsConstant()) {
@@ -336,7 +359,7 @@ struct Quaternion : AstT<AstType::Quaternion> {
     }
 };
 
-struct Key : AstT<AstType::Key> {
+struct Key : Literal<AstType::Key> {
     String value;
 
     virtual runtime::OptionalScriptValue  EvalConstExpr() const {
@@ -353,7 +376,7 @@ struct Key : AstT<AstType::Key> {
     }
 };
 
-struct StringLit : AstT<AstType::StringLit> {
+struct StringLit : Literal<AstType::StringLit> {
     String value;
     virtual runtime::OptionalScriptValue  EvalConstExpr() const {
         return runtime::ScriptValue{
@@ -368,7 +391,7 @@ struct StringLit : AstT<AstType::StringLit> {
     }
 };
 
-struct Integer : AstT<AstType::Integer> {
+struct Integer : Literal<AstType::Integer> {
     int32_t value;
     virtual runtime::OptionalScriptValue  EvalConstExpr() const {
         return runtime::ScriptValue{
@@ -377,13 +400,40 @@ struct Integer : AstT<AstType::Integer> {
             false
         };
     }
+    virtual AstPtr ApplyUnaryOp(AstUnaryOpType op) const {
+        switch(op) {
+        case AstUnaryOpType::Invert:
+        case AstUnaryOpType::Not:
+        case AstUnaryOpType::Sub: {
+                auto copy = std::make_shared<Integer>(*this);
+                switch(op) {
+                case AstUnaryOpType::Invert:
+                    copy->value = ~value;
+                    break;
+                case AstUnaryOpType::Not:
+                    copy->value = !value;
+                    break;
+                case AstUnaryOpType::Sub:
+                    copy->value = -value;
+                    break;
+                default:
+                    break;
+                }
+                return std::static_pointer_cast<Ast>(copy);
+            }
+        default:
+            break;
+        }
+
+        return AstPtr();
+    }
     virtual bool IsConstant() const { return true; }
     virtual void Visit(AstVisitor * v){
         v->VisitInteger(this);
     }
 };
 
-struct Float : AstT<AstType::Float> {
+struct Float : Literal<AstType::Float> {
     double value;
     virtual runtime::OptionalScriptValue  EvalConstExpr() const {
         return runtime::ScriptValue{
@@ -391,6 +441,19 @@ struct Float : AstT<AstType::Float> {
             value,
             false
         };
+    }
+    virtual AstPtr ApplyUnaryOp(AstUnaryOpType op) const {
+        switch(op) {
+        case AstUnaryOpType::Sub: {
+                auto copy = std::make_shared<Float>(*this);
+                copy->value = -value;
+                return std::static_pointer_cast<Ast>(copy);
+            }
+        default:
+            break;
+        }
+
+        return AstPtr();
     }
     virtual bool IsConstant() const { return true; }
     virtual void Visit(AstVisitor * v){
@@ -407,8 +470,13 @@ struct Variable : AstT<AstType::Variable> {
     }
 };
 
-struct List : AstT<AstType::List> {
+struct List : Literal<AstType::List> {
     std::vector<AstPtr> elements;
+
+
+    virtual bool IsLiteral() const {
+        return std::all_of(begin(elements), end(elements), [](AstPtr p) -> bool { return p->IsLiteral(); });
+    }
 
     virtual runtime::OptionalScriptValue  EvalConstExpr() const {
         if(!IsConstant()) {
@@ -480,6 +548,14 @@ struct BoolOp : AstT<AstType::BoolOp> {
 struct UnaryOp : AstT<AstType::UnaryOp> {
     AstUnaryOpType op;
     AstPtr target;
+
+    virtual runtime::OptionalScriptValue EvalConstExpr() const {
+        if(target->IsConstant()) {
+            auto res = target->ApplyUnaryOp(op);
+            if(res) return res->EvalConstExpr();
+        }
+        return {};
+    }
 
     virtual bool IsConstant() const {
         return target->IsConstant();
@@ -570,6 +646,10 @@ struct VarDecl : AstT<AstType::VarDecl> {
     String name;
     AstPtr right;
 
+    virtual bool IsConstant() const {
+        return right && right->IsConstant();
+    }
+
     virtual void Visit(AstVisitor * v){
         v->VisitVarDecl(this);
     }
@@ -633,6 +713,10 @@ struct AugAssignment : AstT<AstType::AugAssignment> {
 // Acts as scope
 struct Body : AstT<AstType::Body> {
     std::vector<AstPtr> statements;
+
+    virtual bool IsConstant() const {
+        return all_constant(statements);
+    }
 
     virtual void Visit(AstVisitor * v){
         v->VisitBody(this);
@@ -714,9 +798,14 @@ struct FunctionLike {
 struct Function : AstT<AstType::Function>, FunctionLike {
     String returnType;
 
+    virtual bool IsConstant() const {
+        return body.IsConstant();
+    }
+
     virtual void Visit(AstVisitor * v){
         v->VisitFunction(this);
     }
+
     virtual void VisitChildren(AstVisitor * v) {
         body.Visit(v);
     }
@@ -724,9 +813,14 @@ struct Function : AstT<AstType::Function>, FunctionLike {
 
 struct Event : AstT<AstType::Event>, FunctionLike {
 
+    virtual bool IsConstant() const {
+        return body.IsConstant();
+    }
+
     virtual void Visit(AstVisitor * v){
         v->VisitEvent(this);
     }
+
     virtual void VisitChildren(AstVisitor * v) {
         body.Visit(v);
     }
@@ -761,6 +855,7 @@ struct States : AstT<AstType::States> {
 
 struct Globals : AstT<AstType::Globals> {
     std::vector<AstPtr> globals;
+    std::vector<AstPtr> functions;
 
     virtual void Visit(AstVisitor * v){
         v->VisitGlobals(this);
@@ -787,6 +882,10 @@ struct Script : AstT<AstType::Script> {
 
 struct Return : AstT<AstType::Return> {
     AstPtr value;
+
+    virtual bool IsConstant() const {
+        return !value || value->IsConstant();
+    }
 
     virtual void Visit(AstVisitor * v){
         v->VisitReturn(this);

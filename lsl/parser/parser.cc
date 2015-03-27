@@ -1192,10 +1192,14 @@ bool globals(State & s, Globals & target) {
             break;
         }
         AstPtr glob;
-        if(!global(s, glob)) {
+        if(global_function(s, glob, false)) {
+            target.functions.push_back(glob);
+        } else if(global_variable(s, glob)) {
+            target.globals.push_back(glob);
+        } else {
+            syntax_error(s, glob, "Invalid global expression");
             return false;
         }
-        target.globals.push_back(glob);
     }
     return guard.commit();
 }
