@@ -21,7 +21,7 @@ typedef boost::multi_index::multi_index_container<
     boost::multi_index::indexed_by<
         boost::multi_index::hashed_unique<
             boost::multi_index::tag<by_key>,
-            boost::multi_index::member<Prim, String, &Prim::key>>,
+            boost::multi_index::member<Prim, Key, &Prim::key>>,
         boost::multi_index::ordered_non_unique<
             boost::multi_index::tag<by_position>,
             boost::multi_index::member<Prim, Vector, &Prim::position>>,
@@ -32,7 +32,7 @@ typedef boost::multi_index::multi_index_container<
 > prim_container;
 
 typedef std::unordered_map<
-    String, LinkSet
+    Key, LinkSet
 > objects_container;
 
 struct Simulator {

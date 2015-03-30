@@ -16,6 +16,12 @@ String converter<String>::from(String const & s) {
     return s;
 }
 
+
+template<>
+String converter<String>::from(Key const & s) {
+    return String(s);
+}
+
 template<>
 String converter<String>::from(Integer i) {
     return to_string(i);
@@ -45,6 +51,49 @@ String converter<String>::from(Rotation r) {
     return to_string(r);
 }
 
+
+///////////////////////////////////////////////////////////////////////
+
+template<>
+Key converter<Key>::from(String const & s) {
+    return s.c_str();
+}
+
+
+template<>
+Key converter<Key>::from(Key const & s) {
+    return s;
+}
+
+template<>
+Key converter<Key>::from(Integer i) {
+    return to_string(i).c_str();
+}
+
+template<>
+Key converter<Key>::from(List const & l) {
+    Key result;
+    for(auto const & e: l) {
+        result.append(e.as_string());
+    }
+    return result;
+}
+
+template<>
+Key converter<Key>::from(Float i) {
+    return Key(to_string(i));
+}
+
+template<>
+Key converter<Key>::from(Vector v) {
+    return Key(to_string(v));
+}
+
+template<>
+Key converter<Key>::from(Rotation r) {
+    return Key(to_string(r));
+}
+
 ///////////////////////////////////////////////////////////////////////
 
 template<>
@@ -58,6 +107,10 @@ Integer converter<Integer>::from(String const & s) {
         return 0;
     }
     return Integer(boost::multiprecision::cpp_int(results.str()));
+}
+template<>
+Integer converter<Integer>::from(Key const & s) {
+    return converter<Integer>::from(String(s));
 }
 
 template<>
@@ -114,6 +167,11 @@ Float converter<Float>::from(String const & s) {
 }
 
 template<>
+Float converter<Float>::from(Key const & s) {
+    return converter<Float>::from(String(s));
+}
+
+template<>
 Float converter<Float>::from(List const &) {
     throw ScriptConversionError(List(), Float());
     return Float();
@@ -155,6 +213,11 @@ Vector converter<Vector>::from(String const & s) {
         result.z = converter<Float>::from(parts[2]);
     }
     return result;
+}
+
+template<>
+Vector converter<Vector>::from(Key const & s) {
+    return converter<Vector>::from(String(s));
 }
 
 template<>
@@ -204,6 +267,11 @@ Rotation converter<Rotation>::from(String const & s) {
 }
 
 template<>
+Rotation converter<Rotation>::from(Key const & s) {
+    return converter<Rotation>::from(String(s));
+}
+
+template<>
 Rotation converter<Rotation>::from(List const &) {
     throw ScriptConversionError(List(), Rotation());
     return Rotation();
@@ -250,6 +318,11 @@ List converter<List>::from(String const & s) {
 #endif
     throw ScriptRuntimeError("Conversion from string to list are not implemented yet.");
     return List();
+}
+
+template<>
+List converter<List>::from(Key const & s) {
+    return converter<List>::from(String(s));
 }
 
 template<>

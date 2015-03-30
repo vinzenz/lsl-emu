@@ -10,6 +10,7 @@
 #include <sqlite/execute.hpp>
 #include <sqlite/transaction.hpp>
 #include <fstream>
+#include <lsl/compiler/analyzer.hh>
 
 int main(int argc, char const **argv)
 {
@@ -215,6 +216,9 @@ int main(int argc, char const **argv)
 
     LSL_LIB_WRAP(llCSV2List);
     LSL_LIB_WRAP(llList2CSV);
+
+    lsl::Analyzer analyzer(scr);
+    analyzer.Perform();
 
     auto script = eval_script("Fake", scr);
 

@@ -64,8 +64,8 @@ struct reference_visitor : boost::static_visitor<ResultType&> {
         return t;
     }
 };
-ScriptValue::string_type ScriptValue::as_key() const {
-    return boost::apply_visitor(value_visitor<string_type>(), value);
+ScriptValue::key_type ScriptValue::as_key() const {
+    return boost::apply_visitor(value_visitor<key_type>(), value);
 }
 
 ScriptValue::string_type ScriptValue::as_string() const {
@@ -97,7 +97,7 @@ ScriptValue::integer_type ScriptValue::as_bool() const {
     case ValueType::String:
         return as_string().empty() ? 0 : 1;
     case ValueType::Key:
-        return as_string().empty() ? 0 : as_string() == "00000000-0000-0000-0000-000000000000" ? 0 : 1;
+        return as_key().empty() ? 0 : as_key() == "00000000-0000-0000-0000-000000000000" ? 0 : 1;
     case ValueType::Rotation:
         return as_rotation() != Quaternion{0., 0., 0., 1.};
     case ValueType::Vector:
@@ -123,6 +123,11 @@ ScriptValue::vector_type & ScriptValue::get_vector() {
 
 ScriptValue::string_type & ScriptValue::get_string() {
     return boost::apply_visitor(reference_visitor<ScriptValue::string_type>(), value);
+}
+
+
+ScriptValue::key_type & ScriptValue::get_key() {
+    return boost::apply_visitor(reference_visitor<ScriptValue::key_type>(), value);
 }
 
 ScriptValue::integer_type & ScriptValue::get_integer() {

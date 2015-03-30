@@ -20,6 +20,14 @@
 namespace lsl {
 
 typedef std::string String;
+
+struct Key : String {
+    using String::String;
+    Key(String const & s) : String(s) {}
+    Key() : String() {};
+
+};
+
 typedef std::vector<String> StringList;
 
 }

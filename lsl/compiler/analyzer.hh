@@ -7,34 +7,80 @@
 
 namespace lsl {
 
+struct VarInfo {
+    runtime::ValueType Type;
+    String Name;
+    std::size_t References; // variable usages
+    bool Initialized;
+    bool IsParameter;
+    Ast* AstNode;
+
+    VarInfo()
+    : Type(runtime::ValueType::Void)
+    , Name()
+    , References(0)
+    , Initialized(false)
+    , IsParameter(false)
+    , AstNode(0)
+    {}
+};
+
+struct EventInfo;
+struct BlockInfo {
+    EventInfo * Within;
+    BlockInfo * Parent;
+    std::map<String, VarInfo> Variables;
+
+    BlockInfo()
+    : Within(nullptr)
+    , Parent(nullptr)
+    , Variables()
+    {}
+};
+
 struct EventInfo {
+    bool IsEvent;
     std::vector<std::tuple<runtime::ValueType, String>> Parameters;
     String Name;
-    AstPtr AstNode;
+    Ast* AstNode;
+    std::vector<std::shared_ptr<BlockInfo>> Blocks;
+    std::map<String, VarInfo> ParamVars;
+
+    EventInfo()
+    : IsEvent(true)
+    , Parameters()
+    , Name()
+    , AstNode(nullptr)
+    , Blocks()
+    {}
 };
 
 struct FunctionInfo : EventInfo {
     runtime::ValueType ReturnType;
     std::size_t Called; // function calls
+
+    FunctionInfo()
+    : EventInfo()
+    , ReturnType(runtime::ValueType::Void)
+    , Called(0)
+    {
+        IsEvent = false;
+    }
 };
 
-struct VarInfo {
-    runtime::ValueType Type;
-    String Name;
-    std::size_t References; // variable usages
-    AstPtr AstNode;
-};
-
-struct BlockInfo {
-    bool Entered;
-
-};
 
 struct StateInfo {
     String Name;
     std::map<String, EventInfo> Events;
-    AstPtr AstNode;
+    Ast* AstNode;
     std::size_t Called; // state xyz calls
+
+    StateInfo()
+    : Name()
+    , Events()
+    , AstNode(nullptr)
+    , Called(0)
+    {}
 };
 
 struct SourceInfo {
@@ -43,10 +89,29 @@ struct SourceInfo {
     std::map<String, StateInfo> States;
 };
 
+enum class AnalyzerError {
+    ParameterShadowingVariableDeclaration, // Warning?
+    CanOnlyAssignToVariable,
+    UsageOfPreviouslyUndeclaredVariable,
+    DuplicatedStateDeclaration,
+    DuplicatedGlobalDeclaration,
+    DuplicatedFunctionDeclaration,
+    UsageOfUndeclaredState,
+    CanNotReturnValueFromVoidFunction,
+    CanNotReturnValueFromEvent,
+};
+
+struct AnalyzerErrorInfo {
+    Ast*            AstNode;
+    EventInfo *     Within;
+    AnalyzerError   Error;
+};
+
 class Analyzer {
-protected:lsl::
-    SourceInfo source_info_;
+protected:
+    lsl::SourceInfo source_info_;
     lsl::Script & script_;
+    std::vector<AnalyzerErrorInfo> errors_;
 public:
     Analyzer(lsl::Script & script);
     virtual ~Analyzer();
@@ -55,6 +120,9 @@ public:
 
     lsl::Script & Script();
     SourceInfo & Info();
+    std::vector<AnalyzerErrorInfo> & Errors() {
+        return errors_;
+    }
 };
 
 }

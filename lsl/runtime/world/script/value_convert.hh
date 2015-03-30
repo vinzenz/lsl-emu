@@ -13,6 +13,7 @@ struct converter {
     typedef T type;
 
     static T from(String const & );
+    static T from(Key const & );
     static T from(Integer);
     static T from(Float);
     static T from(Vector);
@@ -20,6 +21,7 @@ struct converter {
     static T from(List const & );
 };
 
+template class converter<Key>;
 template class converter<String>;
 template class converter<Integer>;
 template class converter<Float>;

@@ -40,6 +40,7 @@ IMPL_SCRIPTTYPE_MAPPER(Integer, as_integer);
 IMPL_SCRIPTTYPE_MAPPER(Vector, as_vector);
 IMPL_SCRIPTTYPE_MAPPER(String, as_string);
 IMPL_SCRIPTTYPE_MAPPER(List, as_list);
+IMPL_SCRIPTTYPE_MAPPER(Key, as_string);
 IMPL_SCRIPTTYPE_MAPPER(Rotation, as_rotation);
 
 template< typename R >

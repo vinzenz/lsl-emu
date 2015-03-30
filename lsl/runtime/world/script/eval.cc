@@ -1614,7 +1614,7 @@ CompiledExpression eval_expr(ScriptRef, Scope &, lsl::StringLit const & v) {
     };
 }
 
-CompiledExpression eval_expr(ScriptRef, Scope &, lsl::Key const & v) {
+CompiledExpression eval_expr(ScriptRef, Scope &, lsl::KeyLit const & v) {
     return {
         ValueType::Key,
         false,
@@ -1733,7 +1733,7 @@ CompiledExpression eval_expr(ScriptRef script, Scope & scope, lsl::Ast const & a
     case AstType::Vector: return eval_expr(script, scope, static_cast<lsl::Vector const &>(a)); break;
     case AstType::Call: return eval_expr(script, scope, static_cast<Call const &>(a)); break;
     case AstType::Quaternion: return eval_expr(script, scope, static_cast<lsl::Quaternion const &>(a)); break;
-    case AstType::Key: return eval_expr(script, scope, static_cast<lsl::Key const &>(a)); break;
+    case AstType::KeyLit: return eval_expr(script, scope, static_cast<lsl::KeyLit const &>(a)); break;
     case AstType::StringLit: return eval_expr(script, scope, static_cast<StringLit const &>(a)); break;
     case AstType::Integer: return eval_expr(script, scope, static_cast<lsl::Integer const &>(a)); break;
     case AstType::Float: return eval_expr(script, scope, static_cast<lsl::Float const &>(a)); break;

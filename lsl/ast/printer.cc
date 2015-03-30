@@ -18,7 +18,7 @@ void print(PrinterState & state, Ast const & a) {
     case AstType::Vector: print(state, static_cast<Vector const &>(a)); break;
     case AstType::Call: print(state, static_cast<Call const &>(a)); break;
     case AstType::Quaternion: print(state, static_cast<Quaternion const &>(a)); break;
-    case AstType::Key: print(state, static_cast<Key const &>(a)); break;
+    case AstType::KeyLit: print(state, static_cast<KeyLit const &>(a)); break;
     case AstType::StringLit: print(state, static_cast<StringLit const &>(a)); break;
     case AstType::Integer: print(state, static_cast<Integer const &>(a)); break;
     case AstType::Float: print(state, static_cast<Float const &>(a)); break;
@@ -224,7 +224,7 @@ char const * to_string(AstCompareOpType op) {
     return nullptr;
 }
 
-void print(PrinterState &, Key const & k) {
+void print(PrinterState &, KeyLit const & k) {
     printf("(key)");
     print_escaped_string(k.value);
 }

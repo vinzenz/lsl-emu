@@ -211,7 +211,7 @@ bool list_init(State & s, AstPtr & target, parser_fun_t fun = expression){
 
 bool check_for_constants(std::shared_ptr<Variable> & ast, AstPtr & target) {
     if(ast->name == "NULL_KEY") {
-        auto k = create<Key>(target);
+        auto k = create<KeyLit>(target);
         clone_location(ast, k);
         k->value = "00000000-0000-0000-0000-000000000000";
         return true;

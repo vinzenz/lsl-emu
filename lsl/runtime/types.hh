@@ -3,6 +3,7 @@
 
 #include <lsl/runtime/vector.hh>
 #include <lsl/runtime/quaternion.hh>
+#include <lsl/types.hh>
 #include <boost/variant.hpp>
 #include <boost/ref.hpp>
 #include <sstream>
@@ -13,7 +14,7 @@ namespace runtime {
 typedef std::string String;
 typedef int32_t     Integer;
 typedef double      Float;
-typedef String      Key;
+typedef lsl::Key    Key;
 typedef Quaternion  Rotation;
 
 
@@ -71,6 +72,7 @@ enum class ValueType : lsl::runtime::Integer {
 
 struct ScriptValue {
     typedef String                  string_type;
+    typedef Key                     key_type;
     typedef Integer                 integer_type;
     typedef Float                   float_type;
     typedef Vector                  vector_type;
@@ -78,6 +80,7 @@ struct ScriptValue {
 
     typedef boost::make_recursive_variant<
         string_type,
+        key_type,
         rotation_type,
         vector_type,
         integer_type,
@@ -95,7 +98,7 @@ struct ScriptValue {
     value_type  value;
     bool        reference;
 
-    string_type     as_key() const;
+    key_type     as_key() const;
     string_type     as_string() const;
     integer_type    as_integer() const;
     float_type      as_float() const;
@@ -108,6 +111,7 @@ struct ScriptValue {
     rotation_type & get_rotation();
     vector_type & get_vector();
     string_type & get_string();
+    key_type & get_key();
     integer_type & get_integer();
     float_type & get_float();
     list_type & get_list();
@@ -124,5 +128,11 @@ inline bool operator>(ScriptValue const & left, ScriptValue const & right) {
 typedef ScriptValue::list_type List;
 
 }}
+
+namespace std {
+    template<>
+    struct hash<lsl::Key> : std::hash<lsl::String> {};
+
+}
 
 #endif //GUARD_LSL_RUNTIME_TYPES_HH_INCLUDED

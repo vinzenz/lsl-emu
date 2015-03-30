@@ -39,7 +39,7 @@ std::shared_ptr<T> ast_cast(std::shared_ptr<U> u) {
     APPLY(List) \
     APPLY(Integer) \
     APPLY(StringLit) \
-    APPLY(Key) \
+    APPLY(KeyLit) \
     APPLY(Float) \
     APPLY(VarDecl) \
     APPLY(Script) \
@@ -155,6 +155,8 @@ struct Ast {
     virtual char const * PrettyName() const = 0;
     virtual bool IsConstant() const { return false; }
     virtual runtime::OptionalScriptValue  EvalConstExpr() const { return {}; }
+    virtual bool HasResultEvaluated() { return true; }
+    virtual runtime::ValueType ResultType() { return runtime::ValueType::Void; }
 
     virtual bool IsLiteral() const { return false; }
 
@@ -255,6 +257,7 @@ struct Vector : AstT<AstType::Vector> {
     AstPtr y;
     AstPtr z;
 
+    virtual runtime::ValueType ResultType() { return runtime::ValueType::Vector; }
     virtual bool IsLiteral() const {
         return x && y && z
             && x->IsLiteral()
@@ -297,7 +300,22 @@ struct Vector : AstT<AstType::Vector> {
 struct Call : AstT<AstType::Call> {
     String name;
     std::vector<AstPtr> parameters;
+    runtime::ValueType evaluated_result_type;
+    bool result_type_evaluated;
 
+    virtual bool HasResultEvaluated() { return result_type_evaluated; }
+
+    Call()
+    : AstT<AstType::Call>()
+    , name()
+    , parameters()
+    , evaluated_result_type(runtime::ValueType::Void)
+    , result_type_evaluated(false)
+    {
+
+    }
+
+    virtual runtime::ValueType ResultType() { return evaluated_result_type; }
     virtual void Visit(AstVisitor * v){
         v->VisitCall(this);
     }
@@ -316,6 +334,7 @@ struct Quaternion : Literal<AstType::Quaternion> {
     AstPtr z;
     AstPtr s;
 
+    virtual runtime::ValueType ResultType() { return runtime::ValueType::Rotation; }
     virtual bool IsLiteral() const {
         return x && y && z && s
             && x->IsLiteral()
@@ -359,9 +378,10 @@ struct Quaternion : Literal<AstType::Quaternion> {
     }
 };
 
-struct Key : Literal<AstType::Key> {
+struct KeyLit : Literal<AstType::KeyLit> {
     String value;
 
+    virtual runtime::ValueType ResultType() { return runtime::ValueType::Key; }
     virtual runtime::OptionalScriptValue  EvalConstExpr() const {
         return runtime::ScriptValue{
             runtime::ValueType::Key,
@@ -372,12 +392,13 @@ struct Key : Literal<AstType::Key> {
 
     virtual bool IsConstant() const { return true; }
     virtual void Visit(AstVisitor * v){
-        v->VisitKey(this);
+        v->VisitKeyLit(this);
     }
 };
 
 struct StringLit : Literal<AstType::StringLit> {
     String value;
+    virtual runtime::ValueType ResultType() { return runtime::ValueType::String; }
     virtual runtime::OptionalScriptValue  EvalConstExpr() const {
         return runtime::ScriptValue{
             runtime::ValueType::Key,
@@ -393,6 +414,7 @@ struct StringLit : Literal<AstType::StringLit> {
 
 struct Integer : Literal<AstType::Integer> {
     int32_t value;
+    virtual runtime::ValueType ResultType() { return runtime::ValueType::Integer; }
     virtual runtime::OptionalScriptValue  EvalConstExpr() const {
         return runtime::ScriptValue{
             runtime::ValueType::Integer,
@@ -435,6 +457,7 @@ struct Integer : Literal<AstType::Integer> {
 
 struct Float : Literal<AstType::Float> {
     double value;
+    virtual runtime::ValueType ResultType() { return runtime::ValueType::Float; }
     virtual runtime::OptionalScriptValue  EvalConstExpr() const {
         return runtime::ScriptValue{
             runtime::ValueType::Float,
@@ -464,7 +487,19 @@ struct Float : Literal<AstType::Float> {
 struct Variable : AstT<AstType::Variable> {
     String name;
     String member;
+    runtime::ValueType evaluated_result_type;
+    bool result_type_evaluated;
 
+    virtual bool HasResultEvaluated() { return result_type_evaluated; }
+    Variable()
+    : AstT<AstType::Variable>()
+    , name()
+    , member()
+    , evaluated_result_type(runtime::ValueType::Void)
+    , result_type_evaluated(false)
+    {}
+
+    virtual runtime::ValueType ResultType() { return evaluated_result_type; }
     virtual void Visit(AstVisitor * v){
         v->VisitVariable(this);
     }
@@ -473,6 +508,7 @@ struct Variable : AstT<AstType::Variable> {
 struct List : Literal<AstType::List> {
     std::vector<AstPtr> elements;
 
+    virtual runtime::ValueType ResultType() { return runtime::ValueType::List; }
 
     virtual bool IsLiteral() const {
         return std::all_of(begin(elements), end(elements), [](AstPtr p) -> bool { return p->IsLiteral(); });
@@ -498,13 +534,32 @@ struct List : Literal<AstType::List> {
     virtual void Visit(AstVisitor * v){
         v->VisitList(this);
     }
+
+    virtual void VisitChildren(AstVisitor * v) {
+        for(auto & e : elements) {
+            e->Visit(v);
+        }
+    }
 };
 
 struct BinOp : AstT<AstType::BinOp> {
     AstPtr left;
     AstPtr right;
     AstBinOpType op;
+    bool result_type_evaluated;
+    runtime::ValueType evaluated_result_type;
 
+    BinOp()
+    : AstT<AstType::BinOp>()
+    , left()
+    , right()
+    , op()
+    , result_type_evaluated(false)
+    , evaluated_result_type(runtime::ValueType::Void)
+    {}
+
+    virtual bool HasResultEvaluated() { return result_type_evaluated; }
+    virtual runtime::ValueType ResultType() { return evaluated_result_type; }
     virtual bool IsConstant() const {
         return left->IsConstant() && right->IsConstant();
     }
@@ -522,6 +577,7 @@ struct BoolOp : AstT<AstType::BoolOp> {
     AstPtr right;
     AstBoolOpType op;
 
+    virtual runtime::ValueType ResultType() { return runtime::ValueType::Integer; }
     virtual runtime::OptionalScriptValue  EvalConstExpr() const {
         runtime::Integer result = (op == AstBoolOpType::And
             ? left->EvalConstExpr().get().as_bool() && right->EvalConstExpr().get().as_bool()
@@ -549,6 +605,8 @@ struct UnaryOp : AstT<AstType::UnaryOp> {
     AstUnaryOpType op;
     AstPtr target;
 
+    virtual bool HasResultEvaluated() { return target->HasResultEvaluated(); }
+    virtual runtime::ValueType ResultType() { return target->ResultType(); }
     virtual runtime::OptionalScriptValue EvalConstExpr() const {
         if(target->IsConstant()) {
             auto res = target->ApplyUnaryOp(op);
@@ -567,60 +625,58 @@ struct UnaryOp : AstT<AstType::UnaryOp> {
         target->Visit(v);
     }
 };
-
+runtime::ValueType value_type(String const & name);
 struct TypeCast : AstT<AstType::TypeCast> {
     String target_type;
     AstPtr right;
 
+    virtual runtime::ValueType ResultType() { return value_type(target_type); }
     virtual runtime::OptionalScriptValue  EvalConstExpr() const {
-        if(target_type == "string") {
+        switch(value_type(target_type)) {
+        case runtime::ValueType::String:
             return runtime::ScriptValue{
                 runtime::ValueType::String,
                 right->EvalConstExpr().get().as_string(),
                 false
             };
-        }
-        if(target_type == "key") {
+        case runtime::ValueType::Key:
             return runtime::ScriptValue{
                 runtime::ValueType::Key,
                 right->EvalConstExpr().get().as_string(),
                 false
             };
-        }
-        if(target_type == "integer") {
+        case runtime::ValueType::Integer:
             return runtime::ScriptValue{
                 runtime::ValueType::Integer,
                 right->EvalConstExpr().get().as_integer(),
                 false
             };
-        }
-        if(target_type == "float") {
+        case runtime::ValueType::Float:
             return runtime::ScriptValue{
-                runtime::ValueType::Integer,
+                runtime::ValueType::Float,
                 right->EvalConstExpr().get().as_float(),
                 false
             };
-        }
-        if(target_type == "vector") {
+        case runtime::ValueType::Vector:
             return runtime::ScriptValue{
-                runtime::ValueType::Integer,
+                runtime::ValueType::Vector,
                 right->EvalConstExpr().get().as_vector(),
                 false
             };
-        }
-        if(target_type == "rotation") {
+        case runtime::ValueType::Rotation:
             return runtime::ScriptValue{
-                runtime::ValueType::Integer,
+                runtime::ValueType::Rotation,
                 right->EvalConstExpr().get().as_rotation(),
                 false
             };
-        }
-        if(target_type == "list") {
+        case runtime::ValueType::List:
             return runtime::ScriptValue{
-                runtime::ValueType::Integer,
+                runtime::ValueType::List,
                 right->EvalConstExpr().get().as_list(),
                 false
             };
+        default:
+            break;
         }
         return {};
     }
@@ -646,6 +702,7 @@ struct VarDecl : AstT<AstType::VarDecl> {
     String name;
     AstPtr right;
 
+    // Result is void
     virtual bool IsConstant() const {
         return right && right->IsConstant();
     }
@@ -654,7 +711,7 @@ struct VarDecl : AstT<AstType::VarDecl> {
         v->VisitVarDecl(this);
     }
     virtual void VisitChildren(AstVisitor * v) {
-        right->Visit(v);
+        if(right) right->Visit(v);
     }
 };
 
@@ -664,6 +721,7 @@ struct Comparison : AstT<AstType::Comparison> {
     AstPtr right;
     AstCompareOpType op;
 
+    virtual runtime::ValueType ResultType() { return runtime::ValueType::Integer; }
     virtual bool IsConstant() const {
         return left->IsConstant() && right->IsConstant();
     }
@@ -679,6 +737,9 @@ struct Comparison : AstT<AstType::Comparison> {
 struct Assignment : AstT<AstType::Assignment> {
     AstPtr left;
     AstPtr right;
+
+    virtual bool HasResultEvaluated() { return left->HasResultEvaluated(); }
+    virtual runtime::ValueType ResultType() { return left->ResultType(); }
 
     virtual bool IsConstant() const {
         // TODO: Should this considered be constant if `right` is constant?
@@ -697,6 +758,9 @@ struct AugAssignment : AstT<AstType::AugAssignment> {
     AstPtr left;
     AstPtr right;
     AstBinOpType op;
+
+    virtual bool HasResultEvaluated() { return left->HasResultEvaluated(); }
+    virtual runtime::ValueType ResultType() { return left->ResultType(); }
 
     virtual bool IsConstant() const {
         return false;
@@ -723,9 +787,7 @@ struct Body : AstT<AstType::Body> {
     }
     virtual void VisitChildren(AstVisitor * v) {
         for(auto & e : statements) {
-            if(e) {
-                e->Visit(v);
-            }
+            e->Visit(v);
         }
     }
 };
@@ -848,7 +910,7 @@ struct States : AstT<AstType::States> {
     }
     virtual void VisitChildren(AstVisitor * v) {
         for(auto & e : states) {
-            if(e) e->Visit(v);
+            e->Visit(v);
         }
     }
 };
@@ -862,7 +924,10 @@ struct Globals : AstT<AstType::Globals> {
     }
     virtual void VisitChildren(AstVisitor * v) {
         for(auto & e : globals) {
-            if(e) e->Visit(v);
+            e->Visit(v);
+        }
+        for(auto & e : functions) {
+            e->Visit(v);
         }
     }
 };
