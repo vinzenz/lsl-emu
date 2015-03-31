@@ -157,7 +157,7 @@ struct Ast {
     virtual runtime::OptionalScriptValue  EvalConstExpr() const { return {}; }
     virtual bool HasResultEvaluated() { return true; }
     virtual runtime::ValueType ResultType() { return runtime::ValueType::Void; }
-
+    virtual bool IsStatement() const { return false; }
     virtual bool IsLiteral() const { return false; }
 
 #define DEFINE_COMMON_ABSTRACT(BaseName)   \
@@ -227,6 +227,7 @@ struct Literal : AstT<Type> {
 
 struct Jump : AstT<AstType::Jump> {
     String label;
+    virtual bool IsStatement() const { return true; }
     virtual void Visit(AstVisitor * v){
         v->VisitJump(this);
     }
@@ -234,12 +235,14 @@ struct Jump : AstT<AstType::Jump> {
 
 struct Label : AstT<AstType::Label> {
     String name;
+    virtual bool IsStatement() const { return true; }
     virtual void Visit(AstVisitor * v){
         v->VisitLabel(this);
     }
 };
 
 struct NoOp : AstT<AstType::NoOp> {
+    virtual bool IsStatement() const { return true; }
     virtual void Visit(AstVisitor * v){
         v->VisitNoOp(this);
     }
@@ -247,6 +250,7 @@ struct NoOp : AstT<AstType::NoOp> {
 
 struct StateChange : AstT<AstType::StateChange> {
     String state;
+    virtual bool IsStatement() const { return true; }
     virtual void Visit(AstVisitor * v){
         v->VisitStateChange(this);
     }
@@ -702,6 +706,7 @@ struct VarDecl : AstT<AstType::VarDecl> {
     String name;
     AstPtr right;
 
+    virtual bool IsStatement() const { return true; }
     // Result is void
     virtual bool IsConstant() const {
         return right && right->IsConstant();
@@ -778,6 +783,7 @@ struct AugAssignment : AstT<AstType::AugAssignment> {
 struct Body : AstT<AstType::Body> {
     std::vector<AstPtr> statements;
 
+    virtual bool IsStatement() const { return true; }
     virtual bool IsConstant() const {
         return all_constant(statements);
     }
@@ -799,6 +805,7 @@ struct For : AstT<AstType::For> {
     AstPtr  body;
 
 
+    virtual bool IsStatement() const { return true; }
     virtual void Visit(AstVisitor * v){
         v->VisitFor(this);
     }
@@ -814,6 +821,7 @@ struct While : AstT<AstType::While> {
     AstPtr condition;
     AstPtr body;
 
+    virtual bool IsStatement() const { return true; }
     virtual void Visit(AstVisitor * v){
         v->VisitWhile(this);
     }
@@ -827,6 +835,7 @@ struct Do : AstT<AstType::Do> {
     AstPtr condition;
     AstPtr body;
 
+    virtual bool IsStatement() const { return true; }
     virtual void Visit(AstVisitor * v){
         v->VisitDo(this);
     }
@@ -841,6 +850,7 @@ struct If : AstT<AstType::If> {
     AstPtr body;
     AstPtr elseIf;
 
+    virtual bool IsStatement() const { return true; }
     virtual void Visit(AstVisitor * v){
         v->VisitIf(this);
     }
@@ -860,6 +870,7 @@ struct FunctionLike {
 struct Function : AstT<AstType::Function>, FunctionLike {
     String returnType;
 
+    virtual bool IsStatement() const { return true; }
     virtual bool IsConstant() const {
         return body.IsConstant();
     }
@@ -879,6 +890,7 @@ struct Event : AstT<AstType::Event>, FunctionLike {
         return body.IsConstant();
     }
 
+    virtual bool IsStatement() const { return true; }
     virtual void Visit(AstVisitor * v){
         v->VisitEvent(this);
     }
@@ -892,6 +904,7 @@ struct StateDef : AstT<AstType::StateDef> {
     String name;
     std::vector<Event> events;
 
+    virtual bool IsStatement() const { return true; }
     virtual void Visit(AstVisitor * v){
         v->VisitStateDef(this);
     }
@@ -905,6 +918,7 @@ struct StateDef : AstT<AstType::StateDef> {
 struct States : AstT<AstType::States> {
     std::vector<std::shared_ptr<StateDef>> states;
 
+    virtual bool IsStatement() const { return true; }
     virtual void Visit(AstVisitor * v){
         v->VisitStates(this);
     }
@@ -919,6 +933,7 @@ struct Globals : AstT<AstType::Globals> {
     std::vector<AstPtr> globals;
     std::vector<AstPtr> functions;
 
+    virtual bool IsStatement() const { return true; }
     virtual void Visit(AstVisitor * v){
         v->VisitGlobals(this);
     }
@@ -936,6 +951,7 @@ struct Script : AstT<AstType::Script> {
     Globals globals;
     States states;
 
+    virtual bool IsStatement() const { return true; }
     virtual void Visit(AstVisitor * v){
         v->VisitScript(this);
     }
@@ -948,6 +964,7 @@ struct Script : AstT<AstType::Script> {
 struct Return : AstT<AstType::Return> {
     AstPtr value;
 
+    virtual bool IsStatement() const { return true; }
     virtual bool IsConstant() const {
         return !value || value->IsConstant();
     }

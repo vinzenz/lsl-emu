@@ -130,13 +130,149 @@ struct AnalyzationVistor : AstVisitor {
     virtual void VisitVector(Vector * i) { i->VisitChildren(this); }
 
     virtual void VisitUnaryOp(UnaryOp * i) { i->VisitChildren(this); }
-    virtual void VisitBinOp(BinOp * i) { i->VisitChildren(this); }
+    virtual void VisitBinOp(BinOp * i) {
+        i->VisitChildren(this);
+        if(!i->HasResultEvaluated()) {
+            uint32_t pattern = 0;
+            pattern |= static_cast<uint32_t>(i->left->ResultType()) << 16;
+            pattern |= static_cast<uint32_t>(i->right->ResultType()) << 8;
+            pattern |= static_cast<uint32_t>(i->op);
+
+#define BINOP_MAKEPAT(TYPEL, TYPER, OP) static_cast<uint32_t>(runtime::ValueType::TYPEL) << 16 | static_cast<uint32_t>(runtime::ValueType::TYPER) << 8 | static_cast<uint32_t>(AstBinOpType::OP)
+            switch(pattern) {
+            case BINOP_MAKEPAT(String, String, Add):
+                i->result_type_evaluated = true;
+                i->evaluated_result_type = runtime::ValueType::String;
+                break;
+            case BINOP_MAKEPAT(Vector, Vector, Add):
+            case BINOP_MAKEPAT(Vector, Vector, Sub):
+            case BINOP_MAKEPAT(Vector, Vector, Mult):
+            case BINOP_MAKEPAT(Vector, Vector, Div):
+            case BINOP_MAKEPAT(Vector, Float, Div):
+            case BINOP_MAKEPAT(Vector, Float, Mult):
+            case BINOP_MAKEPAT(Vector, Integer, Div):
+            case BINOP_MAKEPAT(Vector, Integer, Mult):
+            case BINOP_MAKEPAT(Vector, Rotation, Mult):
+            case BINOP_MAKEPAT(Vector, Rotation, Div):
+                i->result_type_evaluated = true;
+                i->evaluated_result_type = runtime::ValueType::Vector;
+                break;
+            case BINOP_MAKEPAT(Rotation, Rotation, Add):
+            case BINOP_MAKEPAT(Rotation, Rotation, Sub):
+            case BINOP_MAKEPAT(Rotation, Rotation, Mult):
+            case BINOP_MAKEPAT(Rotation, Rotation, Div):
+                i->result_type_evaluated = true;
+                i->evaluated_result_type = runtime::ValueType::Rotation;
+                break;
+            case BINOP_MAKEPAT(Integer, Integer, Add):
+            case BINOP_MAKEPAT(Integer, Integer, Sub):
+            case BINOP_MAKEPAT(Integer, Integer, Div):
+            case BINOP_MAKEPAT(Integer, Integer, Mult):
+            case BINOP_MAKEPAT(Integer, Integer, Mod):
+            case BINOP_MAKEPAT(Integer, Integer, BitAnd):
+            case BINOP_MAKEPAT(Integer, Integer, BitOr):
+            case BINOP_MAKEPAT(Integer, Integer, BitXor):
+            case BINOP_MAKEPAT(Integer, Integer, LeftShift):
+            case BINOP_MAKEPAT(Integer, Integer, RightShift):
+                i->result_type_evaluated = true;
+                i->evaluated_result_type = runtime::ValueType::Integer;
+                break;
+            case BINOP_MAKEPAT(Float, Float, Add):
+            case BINOP_MAKEPAT(Float, Float, Sub):
+            case BINOP_MAKEPAT(Float, Float, Mult):
+            case BINOP_MAKEPAT(Float, Float, Div):
+            case BINOP_MAKEPAT(Float, Float, Mod):
+            case BINOP_MAKEPAT(Integer, Float, Add):
+            case BINOP_MAKEPAT(Integer, Float, Sub):
+            case BINOP_MAKEPAT(Integer, Float, Mult):
+            case BINOP_MAKEPAT(Integer, Float, Div):
+            case BINOP_MAKEPAT(Integer, Float, Mod):
+            case BINOP_MAKEPAT(Float, Integer, Add):
+            case BINOP_MAKEPAT(Float, Integer, Sub):
+            case BINOP_MAKEPAT(Float, Integer, Mult):
+            case BINOP_MAKEPAT(Float, Integer, Div):
+            case BINOP_MAKEPAT(Float, Integer, Mod):
+                i->result_type_evaluated = true;
+                i->evaluated_result_type = runtime::ValueType::Float;
+                break;
+            case BINOP_MAKEPAT(List, Float, Add):
+            case BINOP_MAKEPAT(List, Integer, Add):
+            case BINOP_MAKEPAT(List, Key, Add):
+            case BINOP_MAKEPAT(List, String, Add):
+            case BINOP_MAKEPAT(List, Vector, Add):
+            case BINOP_MAKEPAT(List, Rotation, Add):
+            case BINOP_MAKEPAT(Float, List, Add):
+            case BINOP_MAKEPAT(Integer, List, Add):
+            case BINOP_MAKEPAT(Key, List, Add):
+            case BINOP_MAKEPAT(String, List, Add):
+            case BINOP_MAKEPAT(Vector, List, Add):
+            case BINOP_MAKEPAT(Rotation, List, Add):
+            case BINOP_MAKEPAT(List, List, Add):
+                i->result_type_evaluated = true;
+                i->evaluated_result_type = runtime::ValueType::List;
+                break;
+            default:
+                CreateError(i, AnalyzerError::InvalidOperands);
+                break;
+            }
+#undef BINOP_MAKEPAT
+        }
+    }
     virtual void VisitBoolOp(BoolOp * i) { i->VisitChildren(this); }
-    virtual void VisitComparison(Comparison * i) { i->VisitChildren(this); }
-    virtual void VisitDo(Do * i) { i->VisitChildren(this); }
-    virtual void VisitFor(For * i) { i->VisitChildren(this); }
-    virtual void VisitWhile(While * i) { i->VisitChildren(this); }
-    virtual void VisitIf(If * i) { i->VisitChildren(this); }
+    virtual void VisitComparison(Comparison * i) {
+        i->VisitChildren(this);
+        if(i->left->ResultType() != i->right->ResultType()) {
+            switch(i->left->ResultType()) {
+            case runtime::ValueType::Float:
+            case runtime::ValueType::Integer:
+                if(i->right->ResultType() == runtime::ValueType::Integer
+                || i->right->ResultType() == runtime::ValueType::Float) {
+                    break;
+                    // OK
+                }
+                // Not OK Fallthrough
+            default:
+                CreateError(i, AnalyzerError::InvalidOperands);
+                break;
+            }
+        }
+    }
+
+    virtual void VisitDo(Do * i) {
+        i->VisitChildren(this);
+        if(i->condition->IsStatement()) {
+            CreateError(i, AnalyzerError::ExpressionExpected);
+        }
+    }
+
+    virtual void VisitFor(For * i) {
+        i->VisitChildren(this);
+        if(i->init && i->init->IsStatement()) {
+            CreateError(i->init, AnalyzerError::ExpressionExpected);
+        }
+        if(i->condition && i->condition->IsStatement()) {
+            CreateError(i->condition, AnalyzerError::ExpressionExpected);
+        }
+        if(i->step && i->step->IsStatement()) {
+            CreateError(i->step, AnalyzerError::ExpressionExpected);
+        }
+    }
+
+    virtual void VisitWhile(While * i) {
+        i->VisitChildren(this);
+        if(i->condition->IsStatement()) {
+            CreateError(i, AnalyzerError::ExpressionExpected);
+        }
+    }
+
+    virtual void VisitIf(If * i) {
+        i->VisitChildren(this);
+        if(i->condition->IsStatement()) {
+            CreateError(i, AnalyzerError::ExpressionExpected);
+        }
+    }
+
+
     virtual void VisitExpressionList(ExpressionList * i) { i->VisitChildren(this); }
     virtual void VisitJump(Jump * i) { i->VisitChildren(this); }
     virtual void VisitLabel(Label * i) { i->VisitChildren(this); }
@@ -184,10 +320,49 @@ struct AnalyzationVistor : AstVisitor {
     }
 
     virtual void VisitCall(Call * call) {
+        bool local = false;
         if(Info().Functions.count(call->name)) {
             Info().Functions[call->name].Called++;
+            Info().Functions[call->name].Callers.push_back(call_stack_.back());
+            call_stack_.back()->Calls.push_back(&Info().Functions[call->name]);
+            local = true;
+        }
+        if(!call->HasResultEvaluated()) {
+            if(local) {
+                call->evaluated_result_type = static_cast<FunctionInfo&>(Info().Functions[call->name]).ReturnType;
+            } else {
+                if(analyzer_->Lib().count(call->name) > 0) {
+                    call->evaluated_result_type = analyzer_->Lib()[call->name].Returns;
+                }
+            }
+            call->result_type_evaluated = true;
         }
         call->VisitChildren(this);
+
+        // Now the parameters should be verified
+        std::vector<runtime::ValueType> parameter_types;
+        if(local) {
+            for(auto const & e : Info().Functions[call->name].Parameters) {
+                parameter_types.push_back(std::get<0>(e));
+            }
+        } else {
+            parameter_types = analyzer_->Lib()[call->name].Parameters;
+        }
+
+        if(parameter_types.size() == call->parameters.size()) {
+            for(size_t i = 0; i < parameter_types.size(); ++i) {
+                assert(call->parameters[i]->HasResultEvaluated());
+                if(parameter_types[i] != call->parameters[i]->ResultType()) {
+                    CreateError(call->parameters[i], AnalyzerError::ParameterDoesNotMatchForCall);
+                }
+            }
+        } else {
+            if(parameter_types.size() > call->parameters.size()) {
+                CreateError(call, AnalyzerError::NotEnoughParametersForCall);
+            } else {
+                CreateError(call, AnalyzerError::TooManyParametersForCall);
+            }
+        }
     }
 
     virtual void VisitVarDecl(VarDecl * decl) {
@@ -239,6 +414,8 @@ struct AnalyzationVistor : AstVisitor {
     virtual void VisitStateChange(StateChange * change) {
         if(Info().States.count(change->state) == 0) {
             CreateError(change, AnalyzerError::UsageOfUndeclaredState);
+        } else {
+            Info().States[change->state].Called++;
         }
     }
 
@@ -271,6 +448,10 @@ struct AnalyzationVistor : AstVisitor {
             // Usage of previously undeclared variable
             CreateError(var, AnalyzerError::UsageOfPreviouslyUndeclaredVariable);
         } else {
+            if(!var->HasResultEvaluated()) {
+                var->evaluated_result_type = info->Type;
+                var->result_type_evaluated = true;
+            }
             ++info->References;
         }
     }
@@ -316,6 +497,9 @@ struct AnalyzationVistor : AstVisitor {
                 CreateError(e, AnalyzerError::DuplicatedStateDeclaration);
             }
             Info().States[e->name] = stateinfo(e);
+            if(e->name == "default") {
+                Info().States[e->name].Called = 1;
+            }
         }
 
         script->VisitChildren(this);
@@ -326,7 +510,13 @@ struct AnalyzationVistor : AstVisitor {
 Analyzer::Analyzer(lsl::Script & script)
 : source_info_()
 , script_(script)
-{}
+{
+    if(Lib().empty()) {
+        for(auto const & e : LibInfoData) {
+            Lib()[e.Name] = e;
+        }
+    }
+}
 
 Analyzer::~Analyzer()
 {}

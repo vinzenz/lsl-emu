@@ -2,7 +2,9 @@
 #define GUARD_LSL_COMPILER_ANALYZER_HH_INCLUDED
 
 #include <map>
+#include <unordered_map>
 #include <lsl/ast/ast.hh>
+#include <lsl/compiler/libinfo.hh>
 #include <tuple>
 
 namespace lsl {
@@ -13,7 +15,7 @@ struct VarInfo {
     std::size_t References; // variable usages
     bool Initialized;
     bool IsParameter;
-    Ast* AstNode;
+    Ast* AstNode;    
 
     VarInfo()
     : Type(runtime::ValueType::Void)
@@ -45,6 +47,8 @@ struct EventInfo {
     Ast* AstNode;
     std::vector<std::shared_ptr<BlockInfo>> Blocks;
     std::map<String, VarInfo> ParamVars;
+    std::vector<EventInfo*> Calls;
+    std::vector<EventInfo*> Callers;
 
     EventInfo()
     : IsEvent(true)
@@ -99,6 +103,11 @@ enum class AnalyzerError {
     UsageOfUndeclaredState,
     CanNotReturnValueFromVoidFunction,
     CanNotReturnValueFromEvent,
+    NotEnoughParametersForCall,
+    TooManyParametersForCall,
+    ParameterDoesNotMatchForCall,
+    ExpressionExpected,
+    InvalidOperands,
 };
 
 struct AnalyzerErrorInfo {
@@ -108,7 +117,7 @@ struct AnalyzerErrorInfo {
 };
 
 class Analyzer {
-protected:
+protected:    
     lsl::SourceInfo source_info_;
     lsl::Script & script_;
     std::vector<AnalyzerErrorInfo> errors_;
@@ -122,6 +131,13 @@ public:
     SourceInfo & Info();
     std::vector<AnalyzerErrorInfo> & Errors() {
         return errors_;
+    }
+
+
+    typedef std::unordered_map<std::string, LibInfo> LibFunMap;
+    LibFunMap & Lib() {
+        static LibFunMap m;
+        return m;
     }
 };
 
