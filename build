@@ -1,0 +1,43 @@
+CXXFLAGS="-std=c++11 -I. -O0 -ggdb -Ivsqlite--/include"
+LIBS="-lboost_regex -lboost_system -lboost_filesystem -lsqlite3"
+
+SOURCES=$(cat << SOURCESEND
+    main.cpp
+    double-conversion/src/bignum-dtoa.cc
+    double-conversion/src/bignum.cc
+    double-conversion/src/cached-powers.cc
+    double-conversion/src/diy-fp.cc
+    double-conversion/src/double-conversion.cc
+    double-conversion/src/fast-dtoa.cc
+    double-conversion/src/fixed-dtoa.cc
+    double-conversion/src/strtod.cc
+    lsl/ast/api.cc
+    lsl/ast/printer.cc
+    lsl/compiler/analyzer.cc
+    lsl/compiler/callgraph.cc
+    lsl/filebuf.cc
+    lsl/lexer/lexer.cc
+    lsl/md5.cc
+    lsl/parser/make_string.cc
+    lsl/parser/parser.cc
+    lsl/runtime/library/functions.cc
+    lsl/runtime/library/list.cc
+    lsl/runtime/library/math.cc
+    lsl/runtime/library/string.cc
+    lsl/runtime/world/script/eval.cc
+    lsl/runtime/world/script/state.cc
+    lsl/runtime/world/script/value.cc
+    lsl/runtime/world/script/value_convert.cc
+    vsqlite--/src/sqlite/backup.cpp
+    vsqlite--/src/sqlite/command.cpp
+    vsqlite--/src/sqlite/connection.cpp
+    vsqlite--/src/sqlite/execute.cpp
+    vsqlite--/src/sqlite/query.cpp
+    vsqlite--/src/sqlite/result.cpp
+    vsqlite--/src/sqlite/savepoint.cpp
+    vsqlite--/src/sqlite/transaction.cpp
+    vsqlite--/src/sqlite/view.cpp
+SOURCESEND
+)
+
+g++ $SOURCES -o lsl-emu $LIBS $CXXFLAGS
