@@ -1,7 +1,20 @@
-CXXFLAGS="-std=c++17 -I. -O0 -ggdb -Ivsqlite--/include"
-LIBS="-lstdc++fs -lsqlite3"
+cmake_minimum_required(VERSION 3.0.0)
+project(lsl-emu VERSION 0.1.0)
 
-SOURCES=$(cat << SOURCESEND
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0 -ggdb")
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+link_libraries(stdc++fs sqlite3)
+
+include_directories(
+    vsqlite--/include
+    .
+)
+
+add_executable(lsl-emu
     main.cpp
     double-conversion/src/bignum-dtoa.cc
     double-conversion/src/bignum.cc
@@ -37,7 +50,4 @@ SOURCES=$(cat << SOURCESEND
     vsqlite--/src/sqlite/savepoint.cpp
     vsqlite--/src/sqlite/transaction.cpp
     vsqlite--/src/sqlite/view.cpp
-SOURCESEND
 )
-
-g++-8 $SOURCES -o lsl-emu $LIBS $CXXFLAGS
