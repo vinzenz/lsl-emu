@@ -1,5 +1,5 @@
-CXXFLAGS="-std=c++11 -I. -O0 -ggdb -Ivsqlite--/include"
-LIBS="-lboost_regex -lboost_system -lboost_filesystem -lsqlite3"
+CXXFLAGS="-std=c++17 -I. -O0 -ggdb -Ivsqlite--/include"
+LIBS="-lstdc++fs -lsqlite3"
 
 SOURCES=$(cat << SOURCESEND
     main.cpp
@@ -40,4 +40,4 @@ SOURCES=$(cat << SOURCESEND
 SOURCESEND
 )
 
-g++ $SOURCES -o lsl-emu $LIBS $CXXFLAGS
+g++-8 $SOURCES -o lsl-emu $LIBS $CXXFLAGS

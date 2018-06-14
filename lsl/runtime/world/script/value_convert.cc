@@ -18,7 +18,7 @@
 #include <boost/algorithm/string/split.hpp>
 #include <boost/multiprecision/cpp_int.hpp>
 #include <boost/multiprecision/cpp_dec_float.hpp>
-#include <boost/regex.hpp>
+#include <regex>
 
 namespace lsl {
 namespace runtime {
@@ -114,9 +114,9 @@ Integer converter<Integer>::from(String const & s) {
     static char const * INT_REGEX =
         "(0[xX][0-9a-fA-F]+)|((-|\\+)?[1-9][0-9]*)"
     ;
-    static boost::regex cast_regex(INT_REGEX);
-    boost::smatch results;
-    if(!boost::regex_match(s, results, cast_regex) || results.empty()) {
+    static std::regex cast_regex(INT_REGEX);
+    std::smatch results;
+    if(!std::regex_match(s, results, cast_regex) || results.empty()) {
         return 0;
     }
     return Integer(boost::multiprecision::cpp_int(results.str()));
@@ -163,9 +163,9 @@ Float converter<Float>::from(String const & s) {
         "(\\+|-)?([0-9]+\\.?[0-9]*|\\.[0-9]+)([eE](\\+|-)?[0-9]+)?"
     ;
     String inp = boost::trim_left_copy(s);
-    static boost::regex cast_regex(FLT_REGEX);
-    boost::smatch results;
-    if(!boost::regex_match(inp, results, cast_regex) || results.empty()) {
+    static std::regex cast_regex(FLT_REGEX);
+    std::smatch results;
+    if(!std::regex_match(inp, results, cast_regex) || results.empty()) {
         String tmp = inp.substr(0, 3);
         boost::algorithm::to_lower(tmp);
         if(tmp == "inf") {

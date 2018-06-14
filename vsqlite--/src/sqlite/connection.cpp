@@ -35,7 +35,7 @@
 #include <sqlite/execute.hpp>
 #include <sqlite/connection.hpp>
 #include <sqlite3.h>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 namespace sqlite{
     connection::connection(std::string const & db)
@@ -75,8 +75,8 @@ namespace sqlite{
     }
 
     void connection::open(std::string const & db, sqlite::open_mode open_mode){
-        boost::system::error_code ec;
-        bool exists = boost::filesystem::exists(db, ec);
+        std::error_code ec;
+        bool exists = std::filesystem::exists(db, ec);
         exists = exists && !ec;
         switch(open_mode) {
           case sqlite::open_mode::open_readonly:
@@ -96,7 +96,7 @@ namespace sqlite{
                 break;
             case sqlite::open_mode::always_create:
                 if(exists) {
-                    boost::filesystem::remove(db, ec);
+                    std::filesystem::remove(db, ec);
                     if(ec) {
                         throw database_system_error(
                             "Failed to remove existing database '" + db + "'",
